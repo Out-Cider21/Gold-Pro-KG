@@ -18,13 +18,13 @@ st.set_page_config(
 
 # Initialize Session Profiles for Universal Cross-Device Sync
 if "active_account" not in st.session_state:
-    st.session_state["active_account"] = "Exness Core Node"
+    st.session_state["active_account"] = "FTMO Prop Client (#1513449340)"
 if "terminal_status" not in st.session_state:
-    st.session_state["terminal_status"] = "🟢 SECURE CLOUD GATEWAY ACTIVE"
+    st.session_state["terminal_status"] = "🟢 SYNCED TO FTMO-DEMO"
 if "balance" not in st.session_state:
-    st.session_state["balance"] = 10540.00
+    st.session_state["balance"] = 99998.75
 if "equity" not in st.session_state:
-    st.session_state["equity"] = 10790.50
+    st.session_state["equity"] = 99998.25
 if "margin" not in st.session_state:
     st.session_state["margin"] = 450.00
 if "selected_ticker" not in st.session_state:
@@ -43,7 +43,7 @@ st.markdown("""
         font-family: 'SF Pro Display', '-apple-system', sans-serif;
     }
     
-    /* 5. SMOOTH MOVING NEWS MARQUEE (LEFT TO RIGHT) */
+    /* SMOOTH MOVING NEWS MARQUEE (LEFT TO RIGHT) */
     .ticker-wrap {
         width: 100%; background: rgba(11, 18, 36, 0.95); border-bottom: 1px solid rgba(0, 255, 178, 0.15);
         overflow: hidden; padding: 12px 0; position: fixed; top: 0; left: 0; z-index: 99999; backdrop-filter: blur(5px);
@@ -62,6 +62,7 @@ st.markdown("""
     .crypto-card.danger { border-left: 4px solid #FF4D6D; }
     .crypto-card.warning { border-left: 4px solid #FACC15; }
     .crypto-card.ai-glow { border-left: 4px solid #7C3AED; box-shadow: 0 0 20px rgba(124, 58, 237, 0.25); background: linear-gradient(145deg, rgba(11,18,36,0.9), rgba(23,15,46,0.9)); }
+    .crypto-card.prop-guard { border-left: 4px solid #FFD700; background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); }
     
     .hud-title { font-size: 11px; color: #64748B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
     .hud-value { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
@@ -75,7 +76,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 5. NEWS BANNER STRIP INJECTION (LEFT TO RIGHT MOVING)
+# NEWS BANNER STRIP INJECTION (LEFT TO RIGHT MOVING)
 # =========================================================
 st.markdown("""
 <div class="ticker-wrap">
@@ -90,15 +91,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 1. COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
+# COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
 # =========================================================
 st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
-risk_cash_input = st.sidebar.number_input("Cash Amount at Risk ($)", min_value=1.0, value=250.00, step=10.0)
-sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $5.00)", min_value=0.1, value=5.00, step=0.50)
+risk_cash_input = st.sidebar.number_input("Cash Amount at Risk ($)", min_value=1.0, value=50.00, step=10.0)
+sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $5.00)", min_value=0.1, value=10.00, step=0.50)
 
-# 3. GOLD POSITION SIZING FORMULA
+# GOLD POSITION SIZING FORMULA
 calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
-# 4. TOTAL PROFIT POTENTIAL FORMULA
 take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $15.00)", min_value=0.1, value=15.00, step=1.00)
 profit_potential = calculated_lots * take_profit_distance_usd * 100
 
@@ -120,14 +120,13 @@ tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Da
 # TAB 1: LIVE TERMINAL DASHBOARD
 # =========================================================
 with tab_dashboard:
-    # 9. REWRITTEN WORDING CONTAINER HEADER
     hdr_left, hdr_right = st.columns(2)
     with hdr_left: 
         st.markdown(f"<span class='main-header'>Active Account: {st.session_state['active_account']}</span>", unsafe_allow_html=True)
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. RE-ORDERED HUD METRICS PACKET WITH DYNAMIC COLOR LOGIC
+    # RE-ORDERED HUD METRICS PACKET WITH DYNAMIC COLOR LOGIC
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
     free_margin_calc = st.session_state["equity"] - st.session_state["margin"]
@@ -146,6 +145,26 @@ with tab_dashboard:
     with m5: 
         st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{margin_level_calc}%</div></div>", unsafe_allow_html=True)
 
+    # 🛑 FTMO OBJECTIVE SAFETY GUARD HUB
+    st.markdown("### 🛡️ Prop Firm Trading Objective Allocation Safety Guards")
+    pg1, pg2, pg3 = st.columns(3)
+    
+    # Standard $100k Challenge Parameters Calculations
+    initial_prop_size = 100000.00
+    daily_drawdown_limit = initial_prop_size * 0.05   # $5,000 max daily loss
+    total_drawdown_limit = initial_prop_size * 0.10   # $10,000 max total loss
+    
+    current_total_loss = initial_prop_size - st.session_state["equity"]
+    remaining_total_drawdown = total_drawdown_limit - current_total_loss
+    
+    with pg1:
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Daily Loss Allowed (5%)</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${daily_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
+    with pg2:
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Total Drawdown Limit (10%)</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${total_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
+    with pg3:
+        status_color = "#00FFB2" if remaining_total_drawdown > 2000 else "#FACC15"
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Remaining Total Loss Cushion</div><div style='font-size:20px; font-weight:800; color:{status_color};'>${remaining_total_drawdown:,.2f}</div></div>", unsafe_allow_html=True)
+
     # World-First AI Order Flow Sentiment Engine Panel
     st.markdown("### 🧠 Autonomous AI Market Sentiment Engine (XAUUSD Alpha Pulse)")
     ai_col1, ai_col2, ai_col3 = st.columns(3)
@@ -156,7 +175,7 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # 11. LIVE RUNNING POSITIONS MONITORING PANEL WITH ENTRY AND CURRENT PRICES
+    # LIVE RUNNING POSITIONS MONITORING PANEL WITH ENTRY AND CURRENT PRICES
     st.markdown("### ⚡ Open Positions Watchlist")
     open_positions_mock = [
         {"Ticket": "8859102", "Symbol": "XAUUSD", "Direction": "BUY", "Lots": 1.50, "Opening Price": 2345.50, "Current Live Price": 2351.20, "Floating Profit ($)": 855.00},
@@ -200,20 +219,20 @@ with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
     st.write("Switch servers or refresh security credentials securely over cross-device server connections.")
     
-    col_sel, col_inputs = st.columns(2) # FIXED VALUE PASSED HERE
+    col_sel, col_inputs = st.columns(2)
     with col_sel:
         target_broker = st.radio("Select Target Infrastructure", ["Exness Live Terminal", "XM Global Node", "FTMO Prop Client"])
     
     with col_inputs:
-        input_id = st.number_input("Broker Account Number / Login ID", value=130100171, step=1)
+        input_id = st.number_input("Broker Account Number / Login ID", value=1513449340, step=1)
         input_pass = st.text_input("Master Execution Password", type="password", value="MasterPasswordString")
-        input_server = st.text_input("Server Sub-Domain Routing Name", value="Exness-MT5Real9")
+        input_server = st.text_input("Server Sub-Domain Routing Name", value="FTMO-Demo")
         
         if st.button("🔌 Initialize Secure Server Link", use_container_width=True):
             st.session_state["active_account"] = f"{target_broker} (#{input_id})"
             st.session_state["terminal_status"] = f"🟢 SYNCED TO {input_server.upper()}"
-            st.session_state["balance"] = round(np.random.uniform(8000, 30000), 2)
-            st.session_state["equity"] = st.session_state["balance"] + round(np.random.uniform(-500, 1200), 2)
+            st.session_state["balance"] = 99998.75
+            st.session_state["equity"] = 99998.25
             st.success(f"Successfully switched operational context to {target_broker} server routing node!")
             st.rerun()
 
@@ -223,8 +242,7 @@ with tab_accounts:
 with tab_search_charts:
     st.markdown("### 🔍 Global Market Search Asset Hub")
     
-    # 6. Search box layout supporting Forex, Commodities, Futures, Stocks, and Indices
-    c_search, c_layout = st.columns(2) # FIXED VALUE PASSED HERE
+    c_search, c_layout = st.columns(2)
     with c_search:
         search_query = st.text_input("Enter Asset Ticker Symbol (Format: EXCHANGE:SYMBOL, e.g., OANDA:XAUUSD, BINANCE:BTCUSDT, NASDAQ:AAPL, TVC:SPX)", value=st.session_state["selected_ticker"])
     with c_layout:
@@ -237,7 +255,6 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}` [{st.session_state['grid_layout']}]")
     
-    # Advanced Responsive Embedding Helper for Full TradingView HTML5 Tooling
     def generate_tv_widget(ticker_symbol, element_id, chart_height=500, tf="D"):
         return f"""
         <div class="tradingview-widget-container" style="height:{chart_height}px; width:100%;">
@@ -256,7 +273,6 @@ with tab_search_charts:
         </div>
         """
 
-    # 7 & 8. Multi-Chart Timeframe Grid Layout Implementation with Tools & Drawing overlays
     if st.session_state["grid_layout"] == "Single Chart Layout":
         st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_single", 550, "D"), height=560)
         
