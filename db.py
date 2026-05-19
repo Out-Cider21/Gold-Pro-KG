@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize Session Profiles for Universal Cross-Device Sync
+# Initialize Session Profiles with your Factual FTMO Dashboard metrics
 if "active_account" not in st.session_state:
     st.session_state["active_account"] = "FTMO Prop Client (#1513449340)"
 if "terminal_status" not in st.session_state:
@@ -126,7 +126,7 @@ with tab_dashboard:
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # RE-ORDERED HUD METRICS PACKET WITH DYNAMIC COLOR LOGIC
+    # 10. FIXED REAL VALUE ALLOCATIONS MATCHING CONSOLE DATA
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
     free_margin_calc = st.session_state["equity"] - st.session_state["margin"]
@@ -145,15 +145,13 @@ with tab_dashboard:
     with m5: 
         st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{margin_level_calc}%</div></div>", unsafe_allow_html=True)
 
-    # 🛑 FTMO OBJECTIVE SAFETY GUARD HUB
+    # 🛡️ FTMO OBJECTIVE SAFETY GUARD HUB
     st.markdown("### 🛡️ Prop Firm Trading Objective Allocation Safety Guards")
     pg1, pg2, pg3 = st.columns(3)
     
-    # Standard $100k Challenge Parameters Calculations
     initial_prop_size = 100000.00
-    daily_drawdown_limit = initial_prop_size * 0.05   # $5,000 max daily loss
-    total_drawdown_limit = initial_prop_size * 0.10   # $10,000 max total loss
-    
+    daily_drawdown_limit = initial_prop_size * 0.05   
+    total_drawdown_limit = initial_prop_size * 0.10   
     current_total_loss = initial_prop_size - st.session_state["equity"]
     remaining_total_drawdown = total_drawdown_limit - current_total_loss
     
@@ -175,11 +173,10 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # LIVE RUNNING POSITIONS MONITORING PANEL WITH ENTRY AND CURRENT PRICES
+    # 11. MATCHED ACTIVE MONITOR WITH YOUR EXACT CONSOLE METRICS
     st.markdown("### ⚡ Open Positions Watchlist")
     open_positions_mock = [
-        {"Ticket": "8859102", "Symbol": "XAUUSD", "Direction": "BUY", "Lots": 1.50, "Opening Price": 2345.50, "Current Live Price": 2351.20, "Floating Profit ($)": 855.00},
-        {"Ticket": "8859441", "Symbol": "XAUUSD", "Direction": "SELL", "Lots": 0.50, "Opening Price": 2355.00, "Current Live Price": 2351.20, "Floating Profit ($)": -190.00}
+        {"Ticket": "1513449340", "Symbol": "EURUSD", "Direction": "SELL", "Lots": 0.10, "Opening Price": 1.08640, "Current Live Price": 1.08645, "Floating Profit ($)": -0.50}
     ]
     st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
 
@@ -213,27 +210,28 @@ with tab_dashboard:
         st.plotly_chart(fig_equity, use_container_width=True)
 
 # =========================================================
-# TAB 2: ACCOUNT MANAGEMENT NODE (BROKER PROFILE SWITCHER)
+# TAB 2: ACCOUNT MANAGEMENT NODE WITH HARDCODED FIX
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
-    st.write("Switch servers or refresh security credentials securely over cross-device server connections.")
+    st.write("Enter your active parameters below to manually bind metrics directly onto your interface cards.")
     
     col_sel, col_inputs = st.columns(2)
     with col_sel:
         target_broker = st.radio("Select Target Infrastructure", ["Exness Live Terminal", "XM Global Node", "FTMO Prop Client"])
     
     with col_inputs:
-        input_id = st.number_input("Broker Account Number / Login ID", value=1513449340, step=1)
-        input_pass = st.text_input("Master Execution Password", type="password", value="MasterPasswordString")
+        input_id = st.number_input("Broker Account Number / Login ID", value=1513449340)
+        input_bal = st.number_input("Factual Account Balance ($)", value=99998.75, step=10.0)
+        input_equ = st.number_input("Factual Account Equity ($)", value=99998.25, step=10.0)
         input_server = st.text_input("Server Sub-Domain Routing Name", value="FTMO-Demo")
         
-        if st.button("🔌 Initialize Secure Server Link", use_container_width=True):
+        if st.button("🔌 Force Secure Cloud Update", use_container_width=True):
             st.session_state["active_account"] = f"{target_broker} (#{input_id})"
             st.session_state["terminal_status"] = f"🟢 SYNCED TO {input_server.upper()}"
-            st.session_state["balance"] = 99998.75
-            st.session_state["equity"] = 99998.25
-            st.success(f"Successfully switched operational context to {target_broker} server routing node!")
+            st.session_state["balance"] = input_bal
+            st.session_state["equity"] = input_equ
+            st.success("State metrics applied! All top display boxes updated successfully.")
             st.rerun()
 
 # =========================================================
@@ -244,7 +242,7 @@ with tab_search_charts:
     
     c_search, c_layout = st.columns(2)
     with c_search:
-        search_query = st.text_input("Enter Asset Ticker Symbol (Format: EXCHANGE:SYMBOL, e.g., OANDA:XAUUSD, BINANCE:BTCUSDT, NASDAQ:AAPL, TVC:SPX)", value=st.session_state["selected_ticker"])
+        search_query = st.text_input("Enter Asset Ticker Symbol", value=st.session_state["selected_ticker"])
     with c_layout:
         layout_selection = st.selectbox("Select Workspace Multi-Chart Grid Profile", ["Single Chart Layout", "2-Chart Split Matrix Grid", "4-Chart Comprehensive Matrix Grid"])
     
@@ -253,7 +251,7 @@ with tab_search_charts:
         st.session_state["grid_layout"] = layout_selection
         st.rerun()
         
-    st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}` [{st.session_state['grid_layout']}]")
+    st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
     def generate_tv_widget(ticker_symbol, element_id, chart_height=500, tf="D"):
         return f"""
@@ -275,29 +273,14 @@ with tab_search_charts:
 
     if st.session_state["grid_layout"] == "Single Chart Layout":
         st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_single", 550, "D"), height=560)
-        
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
-        with grid_col1:
-            st.markdown("##### ⏱️ Lower Execution Timeframe (15-Minute Feed)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_split_1", 450, "15"), height=460)
-        with grid_col2:
-            st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Bar Feed)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_split_2", 450, "D"), height=460)
-            
+        with grid_col1: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_split_1", 450, "15"), height=460)
+        with grid_col2: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_split_2", 450, "D"), height=460)
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1:
-            st.markdown("##### ⏱️ Scalp Interval (5-Minute Grid)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_1", 350, "5"), height=360)
-        with r1_c2:
-            st.markdown("##### ⏱️ Execution Interval (15-Minute Grid)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_2", 350, "15"), height=360)
-            
+        with r1_c1: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_1", 350, "5"), height=360)
+        with r1_c2: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_2", 350, "15"), height=360)
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1:
-            st.markdown("##### ⏱️ HTF Structure (4-Hour Grid)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_3", 350, "240"), height=360)
-        with r2_c2:
-            st.markdown("##### ⏱️ Macro Trend Direction (Daily Grid)")
-            st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_4", 350, "D"), height=360)
+        with r2_c1: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_3", 350, "240"), height=360)
+        with r2_c2: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "chart_4g_4", 350, "D"), height=360)
