@@ -4,7 +4,6 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import io
 
 # =========================================================
 # INITIAL ARCHITECTURE & THEME SETUP
@@ -16,17 +15,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize Session Profiles with your Factual FTMO Dashboard metrics
+# Initialize Session Profiles with your Factual Live MT5 metrics
 if "active_account" not in st.session_state:
     st.session_state["active_account"] = "FTMO Prop Client (#1513449340)"
 if "terminal_status" not in st.session_state:
     st.session_state["terminal_status"] = "🟢 SYNCED TO FTMO-DEMO"
 if "balance" not in st.session_state:
-    st.session_state["balance"] = 99998.75
+    st.session_state["balance"] = 100000.50
 if "equity" not in st.session_state:
-    st.session_state["equity"] = 99998.25
-if "margin" not in st.session_state:
-    st.session_state["margin"] = 450.00
+    st.session_state["equity"] = 100000.50
+if "free_margin" not in st.session_state:
+    st.session_state["free_margin"] = 100000.50
+if "margin_level" not in st.session_state:
+    st.session_state["margin_level"] = 0.00
 if "selected_ticker" not in st.session_state:
     st.session_state["selected_ticker"] = "OANDA:XAUUSD"
 if "grid_layout" not in st.session_state:
@@ -94,12 +95,12 @@ st.markdown("""
 # COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
 # =========================================================
 st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
-risk_cash_input = st.sidebar.number_input("Cash Amount at Risk ($)", min_value=1.0, value=50.00, step=10.0)
-sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $5.00)", min_value=0.1, value=10.00, step=0.50)
+risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
+sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $10.00)", min_value=0.1, value=10.00, step=0.50)
 
 # GOLD POSITION SIZING FORMULA
 calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
-take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $15.00)", min_value=0.1, value=15.00, step=1.00)
+take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $20.00)", min_value=0.1, value=20.00, step=1.00)
 profit_potential = calculated_lots * take_profit_distance_usd * 100
 
 st.sidebar.markdown(f"""
@@ -126,11 +127,9 @@ with tab_dashboard:
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. FIXED REAL VALUE ALLOCATIONS MATCHING CONSOLE DATA
+    # 10. REAL-TIME HUD CARD GRID CONFIGURATION
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
-    free_margin_calc = st.session_state["equity"] - st.session_state["margin"]
-    margin_level_calc = round((st.session_state["equity"] / st.session_state["margin"]) * 100, 1) if st.session_state["margin"] > 0 else 0.0
 
     with m1: 
         f_card = "crypto-card danger" if floating_yield < 0 else "crypto-card"
@@ -141,9 +140,26 @@ with tab_dashboard:
     with m3: 
         st.markdown(f"<div class='crypto-card'><div class='hud-title'>Balance</div><div class='hud-value neon-text-green'>${st.session_state['balance']:,.2f}</div></div>", unsafe_allow_html=True)
     with m4: 
-        st.markdown(f"<div class='crypto-card blue'><div class='hud-title'>Free Margin Cushion</div><div class='hud-value neon-text-blue'>${free_margin_calc:,.2f}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='crypto-card blue'><div class='hud-title'>Free Margin Cushion</div><div class='hud-value neon-text-blue'>${st.session_state['free_margin']:,.2f}</div></div>", unsafe_allow_html=True)
     with m5: 
-        st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{margin_level_calc}%</div></div>", unsafe_allow_html=True)
+        m_lvl_text = f"{st.session_state['margin_level']}%" if st.session_state['margin_level'] > 0 else "0.0% (No Load)"
+        st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{m_lvl_text}</div></div>", unsafe_allow_html=True)
+
+    # 🛡️ AUTOMATED TP/SL BOUNDARY MONITORING SAFETY SYSTEM
+    if abs(floating_yield) > 0:
+        st.markdown("### 🚨 Live Order Execution Boundary Alert Tracker")
+        alert_col1, alert_col2 = st.columns(2)
+        
+        # Calculate real-time projected exposure
+        current_projected_risk = abs(floating_yield)
+        is_breaching = current_projected_risk > risk_cash_input
+        
+        with alert_col1:
+            card_style = "crypto-card danger" if is_breaching else "crypto-card warning"
+            status_label = "⚠️ RISK THRESHOLD BREACHED" if is_breaching else "✅ WITHIN RISK PARAMETERS"
+            st.markdown(f"<div class='{card_style}'><div class='hud-title'>Target Protection Status</div><div style='font-size:18px; font-weight:800;'>{status_label}</div></div>", unsafe_allow_html=True)
+        with alert_col2:
+            st.markdown(f"<div class='crypto-card blue'><div class='hud-title'>Active Lot Size Allocation Risk</div><div style='font-size:18px; font-weight:800; color:#00D1FF;'>Projected Risk Max Limit: ${risk_cash_input:,.2f}</div></div>", unsafe_allow_html=True)
 
     # 🛡️ FTMO OBJECTIVE SAFETY GUARD HUB
     st.markdown("### 🛡️ Prop Firm Trading Objective Allocation Safety Guards")
@@ -153,15 +169,14 @@ with tab_dashboard:
     daily_drawdown_limit = initial_prop_size * 0.05   
     total_drawdown_limit = initial_prop_size * 0.10   
     current_total_loss = initial_prop_size - st.session_state["equity"]
-    remaining_total_drawdown = total_drawdown_limit - current_total_loss
+    remaining_to_lose_before_fail = total_drawdown_limit - current_total_loss if current_total_loss > 0 else total_drawdown_limit
     
     with pg1:
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Daily Loss Allowed (5%)</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${daily_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Daily Loss Limit</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${daily_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
     with pg2:
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Total Drawdown Limit (10%)</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${total_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Total Loss Limit</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${total_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
     with pg3:
-        status_color = "#00FFB2" if remaining_total_drawdown > 2000 else "#FACC15"
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Remaining Total Loss Cushion</div><div style='font-size:20px; font-weight:800; color:{status_color};'>${remaining_total_drawdown:,.2f}</div></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Remaining Total Loss Buffer</div><div style='font-size:20px; font-weight:800; color:#00FFB2;'>${remaining_to_lose_before_fail:,.2f}</div></div>", unsafe_allow_html=True)
 
     # World-First AI Order Flow Sentiment Engine Panel
     st.markdown("### 🧠 Autonomous AI Market Sentiment Engine (XAUUSD Alpha Pulse)")
@@ -173,12 +188,15 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # 11. MATCHED ACTIVE MONITOR WITH YOUR EXACT CONSOLE METRICS
+    # 11. STREAMING MONITOR WATCHLIST (Tied directly to floating yield)
     st.markdown("### ⚡ Open Positions Watchlist")
-    open_positions_mock = [
-        {"Ticket": "1513449340", "Symbol": "EURUSD", "Direction": "SELL", "Lots": 0.10, "Opening Price": 1.08640, "Current Live Price": 1.08645, "Floating Profit ($)": -0.50}
-    ]
-    st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
+    if abs(floating_yield) > 0.01:
+        open_positions_mock = [
+            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY" if floating_yield > 0 else "SELL", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
+        ]
+        st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
+    else:
+        st.info("No active open positions loaded on your synchronized terminal profile workspace.")
 
     layout_left, layout_right = st.columns([1, 1.2])
     with layout_left:
@@ -210,7 +228,7 @@ with tab_dashboard:
         st.plotly_chart(fig_equity, use_container_width=True)
 
 # =========================================================
-# TAB 2: ACCOUNT MANAGEMENT NODE WITH HARDCODED FIX
+# TAB 2: ACCOUNT MANAGEMENT NODE
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
@@ -222,8 +240,9 @@ with tab_accounts:
     
     with col_inputs:
         input_id = st.number_input("Broker Account Number / Login ID", value=1513449340)
-        input_bal = st.number_input("Factual Account Balance ($)", value=99998.75, step=10.0)
-        input_equ = st.number_input("Factual Account Equity ($)", value=99998.25, step=10.0)
+        input_bal = st.number_input("Factual Account Balance ($)", value=100000.50, step=10.0)
+        input_equ = st.number_input("Factual Account Equity ($)", value=100000.50, step=10.0)
+        input_margin = st.number_input("Factual Free Margin ($)", value=100000.50, step=10.0)
         input_server = st.text_input("Server Sub-Domain Routing Name", value="FTMO-Demo")
         
         if st.button("🔌 Force Secure Cloud Update", use_container_width=True):
@@ -231,6 +250,8 @@ with tab_accounts:
             st.session_state["terminal_status"] = f"🟢 SYNCED TO {input_server.upper()}"
             st.session_state["balance"] = input_bal
             st.session_state["equity"] = input_equ
+            st.session_state["free_margin"] = input_margin
+            st.session_state["margin_level"] = round((input_equ / (input_equ - input_margin)) * 100, 1) if (input_equ - input_margin) > 0 else 0.0
             st.success("State metrics applied! All top display boxes updated successfully.")
             st.rerun()
 
