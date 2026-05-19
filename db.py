@@ -92,7 +92,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 1. COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
+# COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
 # =========================================================
 st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
 risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
@@ -101,7 +101,6 @@ sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $1
 # GOLD POSITION SIZING FORMULA
 calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
 take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $20.00)", min_value=0.1, value=20.00, step=1.00)
-# 4. TOTAL PROFIT POTENTIAL FORMULA
 profit_potential = calculated_lots * take_profit_distance_usd * 100
 
 st.sidebar.markdown(f"""
@@ -114,7 +113,7 @@ st.sidebar.markdown(f"""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# SYSTEM DASHBOARD NAVIGATION TABS (REQUIREMENT 2, 6, 7)
+# SYSTEM DASHBOARD NAVIGATION TABS
 # =========================================================
 tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Dashboard", "🏦 Account Manager Node", "🔍 Asset Search & TradingView Charts"])
 
@@ -122,14 +121,13 @@ tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Da
 # TAB 1: LIVE TERMINAL DASHBOARD
 # =========================================================
 with tab_dashboard:
-    # 9. REWRITTEN WORDING CONTAINER HEADER ("Active Account")
     hdr_left, hdr_right = st.columns(2)
     with hdr_left: 
         st.markdown(f"<span class='main-header'>Active Account: {st.session_state['active_account']}</span>", unsafe_allow_html=True)
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. RE-ORDERED HUD METRICS PACKET
+    # 10. REAL-TIME HUD CARD GRID CONFIGURATION
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
 
@@ -174,11 +172,11 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # 11. AREA DISPLAYING OPEN POSITIONS
+    # Open Positions Watchlist
     st.markdown("### ⚡ Open Positions Watchlist")
     if abs(floating_yield) > 0.01:
         open_positions_mock = [
-            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY" if floating_yield > 0 else "SELL", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
+            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
         ]
         st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
     else:
@@ -206,7 +204,7 @@ with tab_dashboard:
             "Market Close Bid ($)": [round(2350.0 + (i * 4.2), 2) for i in range(15)]
         })
         fig_equity = go.Figure()
-        fig_equity.add_trace(go.Scatter(x=df_historical["Trading Date"], y=df_historical["Market Close Bid ($)"], mode="lines+markers", line=dict(color="#00FFB2", width=3), fill="tozeroy", fillcolor="rgba(0, 255, 178, 0.02)"))
+        fig_equity.add_trace(go.Scatter(x=dates_gen, y=df_historical["Market Close Bid ($)"], mode="lines+markers", line=dict(color="#00FFB2", width=3), fill="tozeroy", fillcolor="rgba(0, 255, 178, 0.02)"))
         fig_equity.update_layout(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#94A3B8"), height=240,
             margin=dict(l=20, r=20, t=20, b=20), xaxis=dict(gridcolor="rgba(255,255,255,0.02)"), yaxis=dict(gridcolor="rgba(255,255,255,0.02)")
@@ -218,7 +216,6 @@ with tab_dashboard:
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
-    st.write("Enter your active parameters below to manually bind metrics directly onto your interface cards.")
     
     col_sel, col_inputs = st.columns(2)
     with col_sel:
@@ -242,14 +239,14 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: ASSET SEARCH BOX & AUTO-FORMATTING IFRAME COCKPIT
+# TAB 3: IMMUNIZED NATIVE LIBRARIES WIDGET SUITE
 # =========================================================
 with tab_search_charts:
-    st.markdown("### 🔍 6. Global Market Search Asset Hub")
+    st.markdown("### 🔍 Global Market Search Asset Hub")
     
     c_search, c_layout = st.columns(2)
     with c_search:
-        search_query = st.text_input("Enter Asset Ticker Symbol (e.g. XAUUSD, BTCUSDT, EURUSD, AAPL, SPX)", value=st.session_state["selected_ticker"])
+        search_query = st.text_input("Enter Asset Ticker Symbol (e.g. XAUUSD, BTCUSDT, EURUSD, SPX)", value=st.session_state["selected_ticker"])
     with c_layout:
         layout_selection = st.selectbox("Select Workspace Multi-Chart Grid Profile", ["Single Chart Layout", "2-Chart Split Matrix Grid", "4-Chart Comprehensive Matrix Grid"])
     
@@ -260,49 +257,47 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # ⚡ AUTO-FORMATTING PROTOCOL ROUTER (Appends verification headers to secure layout handshake)
-    def get_formatted_tv_url(ticker_symbol, timeframe="D"):
-        clean_ticker = ticker_symbol.upper().strip()
-        # Enforce correct exchange routing flags automatically
-        if "OANDA" not in clean_ticker and "BINANCE" not in clean_ticker and "NASDAQ" not in clean_ticker and "TVC" not in clean_ticker:
-            if clean_ticker in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]:
-                clean_ticker = f"OANDA:{clean_ticker}"
-            elif clean_ticker in ["BTCUSDT", "ETHUSDT"]:
-                clean_ticker = f"BINANCE:{clean_ticker}"
-            elif clean_ticker in ["AAPL", "TSLA", "NVDA", "AMZN"]:
-                clean_ticker = f"NASDAQ:{clean_ticker}"
-            else:
-                clean_ticker = f"TVC:{clean_ticker}"
-        
-        # Enforce the full explicit web connection address route
-        return f"https://tradingview.com{clean_ticker}&interval={timeframe}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true"
+    # ⚡ SOVEREIGN RENDER PROTOCOL: Injecting compiled raw library objects bypasses iframe handshakes entirely
+    def compile_unrestricted_tv_script(symbol_string, div_id, timeframe="D"):
+        sym = symbol_string.upper().strip()
+        if "OANDA" not in sym and "BINANCE" not in sym and "NASDAQ" not in sym and "TVC" not in sym:
+            if sym in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]: sym = f"OANDA:{sym}"
+            elif sym in ["BTCUSDT", "ETHUSDT"]: sym = f"BINANCE:{sym}"
+            else: sym = f"TVC:{sym}"
+            
+        return f"""
+        <div class="tradingview-widget-container" style="width:100%; height:600px; background-color:#030611;">
+            <div id="{div_id}" style="width:100%; height:600px;"></div>
+            <script type="text/javascript" src="https://tradingview.com"></script>
+            <script type="text/javascript">
+            new TradingView.widget({{
+                "width": "100%", "height": 600, "symbol": "{sym}", "interval": "{timeframe}",
+                "timezone": "exchange", "theme": "dark", "style": "1", "locale": "en",
+                "enable_publishing": false, "hide_side_toolbar": false, "allow_symbol_change": true,
+                "container_id": "{div_id}"
+            }});
+            </script>
+        </div>
+        """
 
-    # Native Streamlit cloud components invoke the protocol loop cleanly
+    # Grid compilation pipelines
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=650, scrolling=False)
+        raw_html_payload = compile_unrestricted_tv_script(st.session_state["selected_ticker"], "master_canvas_div", "D")
+        st.components.v1.html(raw_html_payload, height=620, scrolling=False)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "15"), height=500, scrolling=False)
+            st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "split_canvas_1", "15"), height=620, scrolling=False)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=500, scrolling=False)
+            st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "split_canvas_2", "D"), height=620, scrolling=False)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: 
-            st.markdown("##### ⏱️ Lower Execution Timeframe (5-Min Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "5"), height=400, scrolling=False)
-        with r1_c2: 
-            st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "15"), height=400, scrolling=False)
-            
+        with r1_c1: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c1", "5"), height=620, scrolling=False)
+        with r1_c2: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c2", "15"), height=620, scrolling=False)
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: 
-            st.markdown("##### ⏱️ Higher Trend Timeframe (4-Hour Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "240"), height=400, scrolling=False)
-        with r2_c2: 
-            st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=400, scrolling=False)
+        with r2_c1: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c3", "240"), height=620, scrolling=False)
+        with r2_c2: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c4", "D"), height=620, scrolling=False)
