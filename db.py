@@ -176,7 +176,8 @@ with layout_right:
         "Market Close Bid ($)": [round(2350.0 + (i * 4.2) + np.sin(i)*15, 2) for i in range(25)],
         "Net Price Delta ($)": [round(np.sin(i)*12 + np.cos(i)*4, 2) for i in range(25)]
     })
-    st.dataframe(df_historical.style.background_gradient(subset=["Net Price Delta ($)"], cmap="RdYlGn"), use_container_width=True)
+    st.dataframe(df_historical, use_container_width=True)
+
 
 # =========================================================
 # ROW 3: PRICE PATH TRAJECTORY AREA GRAPH
