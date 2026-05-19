@@ -127,7 +127,7 @@ with tab_dashboard:
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. RE-ORDERED HUD METRICS PACKETET WITH DYNAMIC COLOR LOGIC
+    # 10. RE-ORDERED HUD METRICS PACKET WITH DYNAMIC COLOR LOGIC
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
     free_margin_calc = st.session_state["equity"] - st.session_state["margin"]
@@ -146,7 +146,7 @@ with tab_dashboard:
     with m5: 
         st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{margin_level_calc}%</div></div>", unsafe_allow_html=True)
 
-    # NEW addition: World-First AI Order Flow Sentiment Engine Panel
+    # World-First AI Order Flow Sentiment Engine Panel
     st.markdown("### 🧠 Autonomous AI Market Sentiment Engine (XAUUSD Alpha Pulse)")
     ai_col1, ai_col2, ai_col3 = st.columns(3)
     with ai_col1:
@@ -200,7 +200,7 @@ with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
     st.write("Switch servers or refresh security credentials securely over cross-device server connections.")
     
-    col_sel, col_inputs = st.columns()
+    col_sel, col_inputs = st.columns(2) # FIXED VALUE PASSED HERE
     with col_sel:
         target_broker = st.radio("Select Target Infrastructure", ["Exness Live Terminal", "XM Global Node", "FTMO Prop Client"])
     
@@ -224,7 +224,7 @@ with tab_search_charts:
     st.markdown("### 🔍 Global Market Search Asset Hub")
     
     # 6. Search box layout supporting Forex, Commodities, Futures, Stocks, and Indices
-    c_search, c_layout = st.columns([2, 1])
+    c_search, c_layout = st.columns(2) # FIXED VALUE PASSED HERE
     with c_search:
         search_query = st.text_input("Enter Asset Ticker Symbol (Format: EXCHANGE:SYMBOL, e.g., OANDA:XAUUSD, BINANCE:BTCUSDT, NASDAQ:AAPL, TVC:SPX)", value=st.session_state["selected_ticker"])
     with c_layout:
