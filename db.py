@@ -231,7 +231,7 @@ with tab_accounts:
         
         if st.button("🔌 Force Secure Cloud Update", use_container_width=True):
             st.session_state["active_account"] = f"{target_broker} (#{input_id})"
-            st.session_state["terminal_status"] = f"🟢 SYNCED TO {input_server.upper()}"
+            st.session_state["terminal_status"] = f"🟢 SYNC TO {input_server.upper()}"
             st.session_state["balance"] = input_bal
             st.session_state["equity"] = input_equ
             st.session_state["free_margin"] = input_margin
@@ -240,7 +240,7 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: UPDATED ASSET SEARCH BOX & LIVE TRADINGVIEW EMBED
+# TAB 3: ASSET SEARCH BOX & SANDBOX-PROOF WORKSPACE CHART
 # =========================================================
 with tab_search_charts:
     st.markdown("### 🔍 Global Market Search Asset Hub")
@@ -258,37 +258,39 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # NEW SECURE EMBED CONTEXT ROUTER (FIXES CROSS-ORIGIN Permissions Box)
-    def generate_tv_iframe(ticker_symbol, unique_id, tf="D"):
-        # Map formatting parameters into direct URL structure
-        exchange_ticker = ticker_symbol.replace(":", "%3A")
-        return f"""
+    # NEW COMPILER-PROOF HTML DIRECT URL WIDGET (FINALLY FIXES BLANK IFRAME ISSUE)
+    def generate_tradingview_clean_frame(ticker_symbol, timeframe="D"):
+        # Format exchange strings perfectly to match embedded widget routing indexes
+        raw_symbol = ticker_symbol.upper()
+        if ":" not in raw_symbol:
+            raw_symbol = f"OANDA:{raw_symbol}"
+            
+        html_widget_payload = f"""
         <iframe 
-            id="{unique_id}"
-            src="https://tradingview.com{unique_id}&symbol={exchange_ticker}&interval={tf}&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=streamlit"
-            style="width: 100%; height: 550px; border: none; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);"
-            allowwidthchange="true" 
+            src="https://tradingview.com{raw_symbol}&interval={timeframe}&theme=dark&style=1&timezone=exchange&withthemetoggle=false&hide_side_toolbar=false&allow_symbol_change=true&saveimage=1&watchlist=%5B%5D&details=true&hotlist=true&calendar=true&studies=%5B%22RSI%40tv-basicstudies%22%2C%22MASimple%40tv-basicstudies%22%5D&locale=en" 
+            style="width: 100%; height: 600px; border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.55);" 
             allowfullscreen="true">
         </iframe>
         """
+        return html_widget_payload
 
     # Multi-Grid Routing Layout Renderers
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_single", "D"), height=560)
+        st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_split_1", "15"), height=560)
+            st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "15"), height=610)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_split_2", "D"), height=560)
+            st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_4g_1", "5"), height=560)
-        with r1_c2: st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_4g_2", "15"), height=560)
+        with r1_c1: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "5"), height=610)
+        with r1_c2: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "15"), height=610)
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: st.components.v1.html(generate_tv_iframe(st.session_state["selected_ticker"], "tv_4g_3", "240"), height=560)
-        with r2_c2: st.components.v1.html(generate_tv_widget(st.session_state["selected_ticker"], "tv_4g_4", "D"), height=560)
+        with r2_c1: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "240"), height=610)
+        with r2_c2: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
