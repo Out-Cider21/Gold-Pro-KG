@@ -98,7 +98,7 @@ st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px
 risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
 sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $10.00)", min_value=0.1, value=10.00, step=0.50)
 
-# 3. GOLD POSITION SIZING FORMULA
+# GOLD POSITION SIZING FORMULA
 calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
 take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $20.00)", min_value=0.1, value=20.00, step=1.00)
 # 4. TOTAL PROFIT POTENTIAL FORMULA
@@ -129,7 +129,7 @@ with tab_dashboard:
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. RE-ORDERED HUD METRICS PACKET (Open Floating Yield, Equity, Balance, Free Margin, Margin Level)
+    # 10. RE-ORDERED HUD METRICS PACKET
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
 
@@ -174,7 +174,7 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # 11. AREA DISPLAYING OPEN POSITIONS WITH OPENING AND CURRENT LIVE PRICES
+    # 11. AREA DISPLAYING OPEN POSITIONS
     st.markdown("### ⚡ Open Positions Watchlist")
     if abs(floating_yield) > 0.01:
         open_positions_mock = [
@@ -214,7 +214,7 @@ with tab_dashboard:
         st.plotly_chart(fig_equity, use_container_width=True)
 
 # =========================================================
-# TAB 2: ACCOUNT MANAGEMENT NODE (BROKER SWITCHER)
+# TAB 2: ACCOUNT MANAGEMENT NODE
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
@@ -242,14 +242,13 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: BEYOND ROADBLOCKS CLOUD CHART COCKPIT (SOVEREIGN ENGINE)
+# TAB 3: ASSET SEARCH BOX & AUTO-FORMATTING IFRAME COCKPIT
 # =========================================================
 with tab_search_charts:
     st.markdown("### 🔍 6. Global Market Search Asset Hub")
     
     c_search, c_layout = st.columns(2)
     with c_search:
-        # User input handles Forex, Commodities, Futures, Stocks, and Indices
         search_query = st.text_input("Enter Asset Ticker Symbol (e.g. XAUUSD, BTCUSDT, EURUSD, AAPL, SPX)", value=st.session_state["selected_ticker"])
     with c_layout:
         layout_selection = st.selectbox("Select Workspace Multi-Chart Grid Profile", ["Single Chart Layout", "2-Chart Split Matrix Grid", "4-Chart Comprehensive Matrix Grid"])
@@ -261,40 +260,49 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # 7 & 8. SOVEREIGN ENGINE: Formats clean external URLs targeting an isolated widget web engine
-    def get_tradingview_isolated_src_url(ticker_symbol, timeframe="D"):
-        clean_symbol = ticker_symbol.upper()
-        if "OANDA" not in clean_symbol and "BINANCE" not in clean_symbol and "NASDAQ" not in clean_symbol and "TVC" not in clean_symbol:
-            clean_symbol = f"OANDA:{clean_symbol}"
-        return f"https://tradingview.com{clean_symbol}&interval={timeframe}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true"
+    # ⚡ AUTO-FORMATTING PROTOCOL ROUTER (Appends verification headers to secure layout handshake)
+    def get_formatted_tv_url(ticker_symbol, timeframe="D"):
+        clean_ticker = ticker_symbol.upper().strip()
+        # Enforce correct exchange routing flags automatically
+        if "OANDA" not in clean_ticker and "BINANCE" not in clean_ticker and "NASDAQ" not in clean_ticker and "TVC" not in clean_ticker:
+            if clean_ticker in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]:
+                clean_ticker = f"OANDA:{clean_ticker}"
+            elif clean_ticker in ["BTCUSDT", "ETHUSDT"]:
+                clean_ticker = f"BINANCE:{clean_ticker}"
+            elif clean_ticker in ["AAPL", "TSLA", "NVDA", "AMZN"]:
+                clean_ticker = f"NASDAQ:{clean_ticker}"
+            else:
+                clean_ticker = f"TVC:{clean_ticker}"
+        
+        # Enforce the full explicit web connection address route
+        return f"https://tradingview.com{clean_ticker}&interval={timeframe}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true"
 
-    # Native Streamlit iframe components bypass the layout injection roadblocks completely 
+    # Native Streamlit cloud components invoke the protocol loop cleanly
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        target_src = get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D")
-        st.components.v1.iframe(target_src, height=650, scrolling=False)
+        st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=650, scrolling=False)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "15"), height=500, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "15"), height=500, scrolling=False)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D"), height=500, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=500, scrolling=False)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
         with r1_c1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (5-Min Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "5"), height=400, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "5"), height=400, scrolling=False)
         with r1_c2: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "15"), height=400, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "15"), height=400, scrolling=False)
             
         r2_c1, r2_c2 = st.columns(2)
         with r2_c1: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (4-Hour Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "240"), height=400, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "240"), height=400, scrolling=False)
         with r2_c2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D"), height=400, scrolling=False)
+            st.components.v1.iframe(get_formatted_tv_url(st.session_state["selected_ticker"], "D"), height=400, scrolling=False)
