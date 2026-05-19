@@ -92,7 +92,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
+# 1. COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
 # =========================================================
 st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
 risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
@@ -172,7 +172,7 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # Open Positions Watchlist
+    # 11. STREAMING MONITOR WATCHLIST
     st.markdown("### ⚡ Open Positions Watchlist")
     if abs(floating_yield) > 0.01:
         open_positions_mock = [
@@ -216,6 +216,7 @@ with tab_dashboard:
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
+    st.write("Enter your active parameters below to manually bind metrics directly onto your interface cards.")
     
     col_sel, col_inputs = st.columns(2)
     with col_sel:
@@ -239,10 +240,10 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: IMMUNIZED NATIVE LIBRARIES WIDGET SUITE
+# TAB 3: 100% UNBLOCKED EMBED ENGINE (BYPASSES SCRIPT BLOCKS)
 # =========================================================
 with tab_search_charts:
-    st.markdown("### 🔍 Global Market Search Asset Hub")
+    st.markdown("### 🔍 6. Global Market Search Asset Hub")
     
     c_search, c_layout = st.columns(2)
     with c_search:
@@ -257,47 +258,43 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # ⚡ SOVEREIGN RENDER PROTOCOL: Injecting compiled raw library objects bypasses iframe handshakes entirely
-    def compile_unrestricted_tv_script(symbol_string, div_id, timeframe="D"):
-        sym = symbol_string.upper().strip()
+    # ⚡ EXCLUSIVE RE-ARCHITECTURE: Pure HTML Widget Embed Code string constructor (Requires 0 background JavaScript engines)
+    def create_pure_html_tv_frame(ticker_string, timeframe="D"):
+        sym = ticker_string.upper().strip()
         if "OANDA" not in sym and "BINANCE" not in sym and "NASDAQ" not in sym and "TVC" not in sym:
             if sym in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]: sym = f"OANDA:{sym}"
             elif sym in ["BTCUSDT", "ETHUSDT"]: sym = f"BINANCE:{sym}"
             else: sym = f"TVC:{sym}"
             
-        return f"""
-        <div class="tradingview-widget-container" style="width:100%; height:600px; background-color:#030611;">
-            <div id="{div_id}" style="width:100%; height:600px;"></div>
-            <script type="text/javascript" src="https://tradingview.com"></script>
-            <script type="text/javascript">
-            new TradingView.widget({{
-                "width": "100%", "height": 600, "symbol": "{sym}", "interval": "{timeframe}",
-                "timezone": "exchange", "theme": "dark", "style": "1", "locale": "en",
-                "enable_publishing": false, "hide_side_toolbar": false, "allow_symbol_change": true,
-                "container_id": "{div_id}"
-            }});
-            </script>
+        # Standard pure HTML structure that cloud servers cannot block
+        html_code = f"""
+        <div class="tradingview-widget-container" style="height:600px; width:100%;">
+            <iframe 
+                src="https://tradingview.com{sym}&interval={timeframe}&theme=dark&style=1&timezone=exchange&studies=%5B%22RSI%40tv-basicstudies%22%5D&hide_side_toolbar=false&allow_symbol_change=true&locale=en" 
+                style="width: 100%; height: 600px; border: none; border-radius: 12px; background-color: #030611;" 
+                allowfullscreen>
+            </iframe>
         </div>
         """
+        return html_code
 
-    # Grid compilation pipelines
+    # Grid compilation pipelines using raw HTML injection
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        raw_html_payload = compile_unrestricted_tv_script(st.session_state["selected_ticker"], "master_canvas_div", "D")
-        st.components.v1.html(raw_html_payload, height=620, scrolling=False)
+        st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "split_canvas_1", "15"), height=620, scrolling=False)
+            st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "15"), height=620, scrolling=False)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "split_canvas_2", "D"), height=620, scrolling=False)
+            st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c1", "5"), height=620, scrolling=False)
-        with r1_c2: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c2", "15"), height=620, scrolling=False)
+        with r1_c1: st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "5"), height=620, scrolling=False)
+        with r1_c2: st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "15"), height=620, scrolling=False)
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c3", "240"), height=620, scrolling=False)
-        with r2_c2: st.components.v1.html(compile_unrestricted_tv_script(st.session_state["selected_ticker"], "grid_c4", "D"), height=620, scrolling=False)
+        with r2_c1: st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "240"), height=620, scrolling=False)
+        with r2_c2: st.components.v1.html(create_pure_html_tv_frame(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
