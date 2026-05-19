@@ -29,7 +29,7 @@ if "free_margin" not in st.session_state:
 if "margin_level" not in st.session_state:
     st.session_state["margin_level"] = 0.00
 if "selected_ticker" not in st.session_state:
-    st.session_state["selected_ticker"] = "OANDA:XAUUSD"
+    st.session_state["selected_ticker"] = "XAUUSD"
 if "grid_layout" not in st.session_state:
     st.session_state["grid_layout"] = "Single Chart Layout"
 
@@ -44,7 +44,7 @@ st.markdown("""
         font-family: 'SF Pro Display', '-apple-system', sans-serif;
     }
     
-    /* SMOOTH MOVING NEWS MARQUEE (LEFT TO RIGHT) */
+    /* 5. NEWS BANNER STRIP INJECTION (LEFT TO RIGHT MOVING) */
     .ticker-wrap {
         width: 100%; background: rgba(11, 18, 36, 0.95); border-bottom: 1px solid rgba(0, 255, 178, 0.15);
         overflow: hidden; padding: 12px 0; position: fixed; top: 0; left: 0; z-index: 99999; backdrop-filter: blur(5px);
@@ -92,15 +92,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
+# 1. COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
 # =========================================================
 st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
 risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
 sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $10.00)", min_value=0.1, value=10.00, step=0.50)
 
-# GOLD POSITION SIZING FORMULA
+# 3. GOLD POSITION SIZING FORMULA
 calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
 take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $20.00)", min_value=0.1, value=20.00, step=1.00)
+# 4. TOTAL PROFIT POTENTIAL FORMULA
 profit_potential = calculated_lots * take_profit_distance_usd * 100
 
 st.sidebar.markdown(f"""
@@ -113,7 +114,7 @@ st.sidebar.markdown(f"""
 """, unsafe_allow_html=True)
 
 # =========================================================
-# SYSTEM DASHBOARD NAVIGATION TABS
+# SYSTEM DASHBOARD NAVIGATION TABS (REQUIREMENT 2, 6, 7)
 # =========================================================
 tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Dashboard", "🏦 Account Manager Node", "🔍 Asset Search & TradingView Charts"])
 
@@ -121,13 +122,14 @@ tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Da
 # TAB 1: LIVE TERMINAL DASHBOARD
 # =========================================================
 with tab_dashboard:
+    # 9. REWRITTEN WORDING CONTAINER HEADER ("Active Account")
     hdr_left, hdr_right = st.columns(2)
     with hdr_left: 
         st.markdown(f"<span class='main-header'>Active Account: {st.session_state['active_account']}</span>", unsafe_allow_html=True)
     with hdr_right: 
         st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
 
-    # 10. REAL-TIME HUD CARD GRID CONFIGURATION
+    # 10. RE-ORDERED HUD METRICS PACKET (Open Floating Yield, Equity, Balance, Free Margin, Margin Level)
     m1, m2, m3, m4, m5 = st.columns(5)
     floating_yield = st.session_state["equity"] - st.session_state["balance"]
 
@@ -172,11 +174,11 @@ with tab_dashboard:
     with ai_col3:
         st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
 
-    # 11. STREAMING MONITOR WATCHLIST
+    # 11. AREA DISPLAYING OPEN POSITIONS WITH OPENING AND CURRENT LIVE PRICES
     st.markdown("### ⚡ Open Positions Watchlist")
     if abs(floating_yield) > 0.01:
         open_positions_mock = [
-            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
+            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY" if floating_yield > 0 else "SELL", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
         ]
         st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
     else:
@@ -204,7 +206,6 @@ with tab_dashboard:
             "Market Close Bid ($)": [round(2350.0 + (i * 4.2), 2) for i in range(15)]
         })
         fig_equity = go.Figure()
-        # FIXED: Correct trailing bracket closure implemented below
         fig_equity.add_trace(go.Scatter(x=df_historical["Trading Date"], y=df_historical["Market Close Bid ($)"], mode="lines+markers", line=dict(color="#00FFB2", width=3), fill="tozeroy", fillcolor="rgba(0, 255, 178, 0.02)"))
         fig_equity.update_layout(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#94A3B8"), height=240,
@@ -213,7 +214,7 @@ with tab_dashboard:
         st.plotly_chart(fig_equity, use_container_width=True)
 
 # =========================================================
-# TAB 2: ACCOUNT MANAGEMENT NODE
+# TAB 2: ACCOUNT MANAGEMENT NODE (BROKER SWITCHER)
 # =========================================================
 with tab_accounts:
     st.markdown("### 🏦 Multi-Broker Connection Hub")
@@ -241,76 +242,59 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: ASSET SEARCH BOX & CLOUD SCRIPT COCKPIT
+# TAB 3: BEYOND ROADBLOCKS CLOUD CHART COCKPIT (SOVEREIGN ENGINE)
 # =========================================================
 with tab_search_charts:
-    st.markdown("### 🔍 Global Market Search Asset Hub")
+    st.markdown("### 🔍 6. Global Market Search Asset Hub")
     
     c_search, c_layout = st.columns(2)
     with c_search:
-        search_query = st.text_input("Enter Asset Ticker Symbol", value=st.session_state["selected_ticker"])
+        # User input handles Forex, Commodities, Futures, Stocks, and Indices
+        search_query = st.text_input("Enter Asset Ticker Symbol (e.g. XAUUSD, BTCUSDT, EURUSD, AAPL, SPX)", value=st.session_state["selected_ticker"])
     with c_layout:
         layout_selection = st.selectbox("Select Workspace Multi-Chart Grid Profile", ["Single Chart Layout", "2-Chart Split Matrix Grid", "4-Chart Comprehensive Matrix Grid"])
     
     if st.button("🎯 Update Workspace Chart Environment", use_container_width=True):
-        st.session_state["selected_ticker"] = search_query.upper()
+        st.session_state["selected_ticker"] = search_query.upper().strip()
         st.session_state["grid_layout"] = layout_selection
         st.rerun()
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # ADVANCED SCRIPT RENDERER: Injects raw TradingView script objects onto the cloud DOM layer directly
-    def render_tradingview_script_widget(ticker_symbol, element_id, interval="D"):
-        sym = ticker_symbol.upper()
-        if ":" not in sym:
-            sym = f"OANDA:{sym}"
-            
-        script_html = f"""
-        <div class="tradingview-widget-container" style="width: 100%; height: 600px;">
-            <div id="{element_id}" style="width: 100%; height: 600px;"></div>
-            <script type="text/javascript" src="https://tradingview.com"></script>
-            <script type="text/javascript">
-            new TradingView.widget({{
-                "width": "100%",
-                "height": 600,
-                "symbol": "{sym}",
-                "interval": "{interval}",
-                "timezone": "exchange",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#030611",
-                "enable_publishing": false,
-                "hide_side_toolbar": false,   /* FORCES THE FULL DRAWING & EDITING BAR TO LOAD */
-                "allow_symbol_change": true,
-                "studies": [
-                    "RSI@tv-basicstudies",    /* LOADS ADVANCED TECHNICAL INDICATORS BY DEFAULT */
-                    "MASimple@tv-basicstudies"
-                ],
-                "container_id": "{element_id}"
-            }});
-            </script>
-        </div>
-        """
-        return script_html
+    # 7 & 8. SOVEREIGN ENGINE: Formats clean external URLs targeting an isolated widget web engine
+    def get_tradingview_isolated_src_url(ticker_symbol, timeframe="D"):
+        clean_symbol = ticker_symbol.upper()
+        if "OANDA" not in clean_symbol and "BINANCE" not in clean_symbol and "NASDAQ" not in clean_symbol and "TVC" not in clean_symbol:
+            clean_symbol = f"OANDA:{clean_symbol}"
+        return f"https://tradingview.com{clean_symbol}&interval={timeframe}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true"
 
-    # Multi-Grid Routing Layout Renderers
+    # Native Streamlit iframe components bypass the layout injection roadblocks completely 
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_primary_widget", "D"), height=620)
+        target_src = get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D")
+        st.components.v1.iframe(target_src, height=650, scrolling=False)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_split_w1", "15"), height=620)
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "15"), height=500, scrolling=False)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_split_w2", "D"), height=620)
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D"), height=500, scrolling=False)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_4g_w1", "5"), height=620)
-        with r1_c2: st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_4g_w2", "15"), height=620)
+        with r1_c1: 
+            st.markdown("##### ⏱️ Lower Execution Timeframe (5-Min Feed)")
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "5"), height=400, scrolling=False)
+        with r1_c2: 
+            st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "15"), height=400, scrolling=False)
+            
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_4g_w3", "240"), height=620)
-        with r2_c2: st.components.v1.html(render_tradingview_script_widget(st.session_state["selected_ticker"], "tv_4g_w4", "D"), height=620)
+        with r2_c1: 
+            st.markdown("##### ⏱️ Higher Trend Timeframe (4-Hour Feed)")
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "240"), height=400, scrolling=False)
+        with r2_c2: 
+            st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
+            st.components.v1.iframe(get_tradingview_isolated_src_url(st.session_state["selected_ticker"], "D"), height=400, scrolling=False)
