@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 # =========================================================
 # PAGE CONFIG
 # =========================================================
+
 st.set_page_config(
     page_title="IMMACULATE GOLD PRO // TRADING NODE",
     page_icon="⚡",
@@ -16,6 +17,7 @@ st.set_page_config(
 # =========================================================
 # SESSION STATE
 # =========================================================
+
 defaults = {
     "active_account": "FTMO Prop Client (#1513449340)",
     "terminal_status": "🟢 SYNC TO FTMO-DEMO",
@@ -34,30 +36,72 @@ for key, value in defaults.items():
 # =========================================================
 # PREMIUM CSS
 # =========================================================
+
 st.markdown("""
 <style>
 
 html, body, [class*="css"], [data-testid="stAppViewContainer"] {
-    background-color: #030611 !important;
+    background: #020617 !important;
     color: #E2E8F0 !important;
-    font-family: 'SF Pro Display', sans-serif;
+    font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.block-container {
+    padding-top: 0.8rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 100% !important;
 }
 
 /* HEADER */
+
 .main-header {
-    font-size: 28px;
+    font-size: 34px;
     font-weight: 900;
-    color: white;
+    letter-spacing: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #FFFFFF,
+            #00D1FF,
+            #00FFB2
+        );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* CARDS */
+
 .crypto-card {
-    background: rgba(11,18,36,0.88);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 15px;
-    border-left: 4px solid #00FFB2;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15,23,42,0.95),
+            rgba(2,6,23,0.98)
+        );
+
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+
+    border: 1px solid rgba(255,255,255,0.05);
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,0.45);
+
+    transition: all 0.25s ease;
+}
+
+.crypto-card:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 15px 45px rgba(0,0,0,0.55),
+        0 0 20px rgba(0,209,255,0.08);
 }
 
 .crypto-card.blue {
@@ -80,19 +124,24 @@ html, body, [class*="css"], [data-testid="stAppViewContainer"] {
     border-left: 4px solid #A855F7;
 }
 
+/* HUD */
+
 .hud-title {
     color: #64748B;
     font-size: 11px;
-    letter-spacing: 1px;
     font-weight: 700;
-    margin-bottom: 5px;
     text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
 }
 
 .hud-value {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 900;
+    line-height: 1;
 }
+
+/* COLORS */
 
 .green {
     color: #00FFB2;
@@ -114,65 +163,221 @@ html, body, [class*="css"], [data-testid="stAppViewContainer"] {
     color: #FACC15;
 }
 
-/* NEWS TICKER */
+/* NEWS BANNER */
+
 .ticker-wrap {
+
     width: 100%;
     overflow: hidden;
-    background: rgba(11,18,36,0.95);
-    border-bottom: 1px solid rgba(0,255,178,0.15);
-    padding: 10px 0;
-    margin-bottom: 20px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,209,255,0.12),
+            rgba(0,255,178,0.10),
+            rgba(124,58,237,0.12)
+        );
+
+    border:
+        1px solid rgba(255,255,255,0.05);
+
+    border-radius: 14px;
+
+    padding: 14px 0;
+
+    margin-bottom: 24px;
+
+    backdrop-filter: blur(14px);
+
+    box-shadow:
+        0 0 20px rgba(0,209,255,0.08),
+        inset 0 0 15px rgba(255,255,255,0.02);
 }
 
 .ticker {
+
     display: inline-block;
     white-space: nowrap;
-    animation: tickerMove 35s linear infinite;
+
+    animation: tickerMove 38s linear infinite;
 }
 
 .ticker-item {
+
     display: inline-block;
-    padding-right: 60px;
-    font-size: 13px;
-    font-weight: bold;
+
+    padding-right: 90px;
+
+    font-size: 15px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.7px;
+
+    text-transform: uppercase;
+
+    font-family:
+        "Orbitron",
+        "Segoe UI",
+        sans-serif;
+
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.15);
 }
 
 @keyframes tickerMove {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* TRADINGVIEW */
+
+iframe {
+
+    width: 100% !important;
+
+    border-radius: 16px !important;
+}
+
+.tradingview-widget-container {
+
+    width: 100% !important;
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255,255,255,0.05);
+
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.55);
+}
+
+/* PLOTLY */
+
+.js-plotly-plot {
+
+    border-radius: 18px !important;
+
+    overflow: hidden !important;
+}
+
+/* BUTTONS */
+
+.stButton > button {
+
+    width: 100%;
+
+    border-radius: 12px;
+
+    height: 52px;
+
+    border: none;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00D1FF,
+            #00FFB2
+        );
+
+    color: #020617;
+
+    font-weight: 800;
+
+    font-size: 15px;
+
+    transition: 0.25s ease;
+}
+
+.stButton > button:hover {
+
+    transform: scale(1.02);
+
+    box-shadow:
+        0 0 25px rgba(0,255,178,0.25);
+}
+
+/* INPUTS */
+
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div[data-baseweb="select"] {
+
+    background: rgba(15,23,42,0.95) !important;
+
+    border-radius: 12px !important;
+
+    border: 1px solid rgba(255,255,255,0.05) !important;
+
+    color: white !important;
+}
+
+/* TABS */
+
+.stTabs [data-baseweb="tab"] {
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #94A3B8;
+
+    padding: 14px 24px;
+}
+
+.stTabs [aria-selected="true"] {
+
+    color: #00FFB2 !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# NEWS BANNER
+# PREMIUM NEWS BANNER
 # =========================================================
+
 st.markdown("""
 <div class="ticker-wrap">
+
     <div class="ticker">
+
         <span class="ticker-item" style="color:#00FFB2;">
-            🔥 XAUUSD MARKET FEED: Gold Approaching Key Resistance Levels
+            🔥 XAUUSD LIVE FLOW • INSTITUTIONAL BUY PRESSURE BUILDING ABOVE KEY LIQUIDITY
         </span>
 
         <span class="ticker-item" style="color:#00D1FF;">
-            ⚡ FED WATCH: Traders Pricing Lower Rate Cuts
+            ⚡ FED WATCH • MARKETS PRICING LOWER RATE EXPECTATIONS INTO Q3
         </span>
 
         <span class="ticker-item" style="color:#FF4D6D;">
-            ⚠️ VOLATILITY ALERT: US Session Expected To Expand Range
+            ⚠️ HIGH VOLATILITY WARNING • NEW YORK SESSION EXPECTED TO EXPAND RANGE
         </span>
 
         <span class="ticker-item" style="color:#FACC15;">
-            📊 GOLD TARGETS: Institutional Desks Watching $5000 Long Term
+            📊 GOLD TARGET MATRIX • MACRO DESKS TRACKING LONG TERM $5000 THESIS
         </span>
+
+        <span class="ticker-item" style="color:#A855F7;">
+            🧠 AI ORDER FLOW ENGINE • BULLISH LIQUIDITY SWEEP DETECTED ON XAUUSD
+        </span>
+
     </div>
+
 </div>
 """, unsafe_allow_html=True)
 
 # =========================================================
 # SIDEBAR
 # =========================================================
+
 st.sidebar.markdown("## 🧮 Position Calculator")
 
 risk_cash_input = st.sidebar.number_input(
@@ -212,6 +417,7 @@ st.sidebar.markdown(f"""
 # =========================================================
 # TABS
 # =========================================================
+
 tab1, tab2, tab3 = st.tabs([
     "📊 Dashboard",
     "🏦 Account Manager",
@@ -219,8 +425,9 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # =========================================================
-# TAB 1 - DASHBOARD
+# TAB 1
 # =========================================================
+
 with tab1:
 
     left, right = st.columns([3,1])
@@ -293,9 +500,8 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # =====================================================
     # AI PANELS
-    # =====================================================
+
     st.markdown("## 🧠 AI Market Engine")
 
     a1, a2, a3 = st.columns(3)
@@ -330,13 +536,11 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-    # =====================================================
     # CHART
-    # =====================================================
+
     st.markdown("## 📈 Commodity Matrix")
 
     dates = [datetime.now() - timedelta(days=i) for i in range(15)]
-
     prices = [2350 + i * 4 for i in range(15)]
 
     fig = go.Figure()
@@ -358,20 +562,16 @@ with tab1:
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================================================
-# TAB 2 - ACCOUNT MANAGER
+# TAB 2
 # =========================================================
+
 with tab2:
 
     st.markdown("## 🏦 Account Management")
 
     broker = st.selectbox(
         "Broker",
-        [
-            "FTMO",
-            "Exness",
-            "XM",
-            "IC Markets"
-        ]
+        ["FTMO", "Exness", "XM", "IC Markets"]
     )
 
     account_id = st.number_input(
@@ -414,8 +614,9 @@ with tab2:
         st.success("Account synced successfully.")
 
 # =========================================================
-# TRADINGVIEW FUNCTION
+# TRADINGVIEW WIDGET
 # =========================================================
+
 def create_tradingview_widget(symbol="OANDA:XAUUSD", interval="15"):
 
     html_code = f"""
@@ -438,7 +639,7 @@ def create_tradingview_widget(symbol="OANDA:XAUUSD", interval="15"):
             "theme": "dark",
             "style": "1",
             "locale": "en",
-            "toolbar_bg": "#030611",
+            "toolbar_bg": "#020617",
             "enable_publishing": false,
             "hide_top_toolbar": false,
             "hide_side_toolbar": false,
@@ -453,8 +654,9 @@ def create_tradingview_widget(symbol="OANDA:XAUUSD", interval="15"):
     return html_code
 
 # =========================================================
-# TAB 3 - LIVE CHARTS
+# TAB 3
 # =========================================================
+
 with tab3:
 
     st.markdown("## 📺 Live TradingView Charts")
@@ -484,9 +686,8 @@ with tab3:
 
     ticker = st.session_state["selected_ticker"]
 
-    # =====================================================
-    # AUTO SYMBOL MAPPING
-    # =====================================================
+    # SYMBOL ROUTING
+
     if ":" not in ticker:
 
         if ticker in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]:
@@ -495,90 +696,91 @@ with tab3:
         elif ticker in ["BTCUSDT", "ETHUSDT"]:
             ticker = f"BINANCE:{ticker}"
 
-        elif ticker in ["NAS100", "US30", "SPX500"]:
-            ticker = f"TVC:{ticker}"
-
         else:
             ticker = f"TVC:{ticker}"
 
     st.markdown(f"### 🔥 {ticker}")
 
-    # =====================================================
     # SINGLE CHART
-    # =====================================================
+
     if st.session_state["grid_layout"] == "Single Chart Layout":
 
         st.components.v1.html(
             create_tradingview_widget(ticker, "15"),
-            height=700
+            height=920,
+            scrolling=False
         )
 
-    # =====================================================
     # 2 CHART LAYOUT
-    # =====================================================
+
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
 
         c1, c2 = st.columns(2)
 
         with c1:
 
-            st.markdown("#### 15 Minute")
+            st.markdown("#### ⏱️ 15 Minute Execution Feed")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "15"),
-                height=600
+                height=720,
+                scrolling=False
             )
 
         with c2:
 
-            st.markdown("#### Daily")
+            st.markdown("#### 🌍 Daily Institutional Trend")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "D"),
-                height=600
+                height=720,
+                scrolling=False
             )
 
-    # =====================================================
     # 4 CHART GRID
-    # =====================================================
+
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
 
         r1c1, r1c2 = st.columns(2)
 
         with r1c1:
 
-            st.markdown("#### 5 Minute")
+            st.markdown("#### ⚡ 5 Minute Scalping Flow")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "5"),
-                height=500
+                height=620,
+                scrolling=False
             )
 
         with r1c2:
 
-            st.markdown("#### 15 Minute")
+            st.markdown("#### ⚡ 15 Minute Execution Flow")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "15"),
-                height=500
+                height=620,
+                scrolling=False
             )
 
         r2c1, r2c2 = st.columns(2)
 
         with r2c1:
 
-            st.markdown("#### 4 Hour")
+            st.markdown("#### 📈 4 Hour Market Structure")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "240"),
-                height=500
+                height=620,
+                scrolling=False
             )
 
         with r2c2:
 
-            st.markdown("#### Daily")
+            st.markdown("#### 🌍 Daily Institutional Trend")
 
             st.components.v1.html(
                 create_tradingview_widget(ticker, "D"),
-                height=500
+                height=620,
+                scrolling=False
             )
