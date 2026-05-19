@@ -1,12 +1,10 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 # =========================================================
-# INITIAL ARCHITECTURE & THEME SETUP
+# PAGE CONFIG
 # =========================================================
 st.set_page_config(
     page_title="IMMACULATE GOLD PRO // TRADING NODE",
@@ -15,286 +13,572 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize Session Profiles with your Factual Live MT5 metrics
-if "active_account" not in st.session_state:
-    st.session_state["active_account"] = "FTMO Prop Client (#1513449340)"
-if "terminal_status" not in st.session_state:
-    st.session_state["terminal_status"] = "🟢 SYNC TO FTMO-DEMO"
-if "balance" not in st.session_state:
-    st.session_state["balance"] = 100000.50
-if "equity" not in st.session_state:
-    st.session_state["equity"] = 100000.50
-if "free_margin" not in st.session_state:
-    st.session_state["free_margin"] = 100000.50
-if "margin_level" not in st.session_state:
-    st.session_state["margin_level"] = 0.00
-if "selected_ticker" not in st.session_state:
-    st.session_state["selected_ticker"] = "XAUUSD"
-if "grid_layout" not in st.session_state:
-    st.session_state["grid_layout"] = "Single Chart Layout"
+# =========================================================
+# SESSION STATE
+# =========================================================
+defaults = {
+    "active_account": "FTMO Prop Client (#1513449340)",
+    "terminal_status": "🟢 SYNC TO FTMO-DEMO",
+    "balance": 100000.50,
+    "equity": 100000.50,
+    "free_margin": 100000.50,
+    "margin_level": 0.0,
+    "selected_ticker": "XAUUSD",
+    "grid_layout": "Single Chart Layout"
+}
+
+for key, value in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # =========================================================
-# PREMIUM CYBER-NEON LAYOUT STRUCTURING (CSS)
+# PREMIUM CSS
 # =========================================================
 st.markdown("""
 <style>
-    html, body, [class*="css"], [data-testid="stAppViewContainer"] {
-        background-color: #030611 !important;
-        color: #E2E8F0 !important;
-        font-family: 'SF Pro Display', '-apple-system', sans-serif;
-    }
-    
-    /* 5. NEWS BANNER STRIP INJECTION (LEFT TO RIGHT MOVING) */
-    .ticker-wrap {
-        width: 100%; background: rgba(11, 18, 36, 0.95); border-bottom: 1px solid rgba(0, 255, 178, 0.15);
-        overflow: hidden; padding: 12px 0; position: fixed; top: 0; left: 0; z-index: 99999; backdrop-filter: blur(5px);
-    }
-    .ticker { display: inline-block; white-space: nowrap; padding-left: 0; animation: marquee_right 32s linear infinite; }
-    .ticker-item { display: inline-block; padding: 0 3rem; font-size: 12px; font-family: monospace; letter-spacing: 1px; font-weight: bold; }
-    @keyframes marquee_right { 0% { transform: translate3d(-100%, 0, 0); } 100% { transform: translate3d(100%, 0, 0); } }
-    
-    .crypto-card {
-        background: rgba(11, 18, 36, 0.85); border: 1px solid rgba(255, 255, 255, 0.04);
-        border-left: 4px solid #00FFB2; border-radius: 12px; padding: 18px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); margin-bottom: 15px;
-    }
-    .crypto-card.blue { border-left: 4px solid #00D1FF; }
-    .crypto-card.purple { border-left: 4px solid #7C3AED; }
-    .crypto-card.danger { border-left: 4px solid #FF4D6D; }
-    .crypto-card.warning { border-left: 4px solid #FACC15; }
-    .crypto-card.ai-glow { border-left: 4px solid #7C3AED; box-shadow: 0 0 20px rgba(124, 58, 237, 0.25); background: linear-gradient(145deg, rgba(11,18,36,0.9), rgba(23,15,46,0.9)); }
-    .crypto-card.prop-guard { border-left: 4px solid #FFD700; background: linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); }
-    
-    .hud-title { font-size: 11px; color: #64748B; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-    .hud-value { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
-    .main-header { font-size: 24px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(90deg, #FFFFFF, #94A3B8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .sub-header-tag { font-size: 10px; background: rgba(0, 255, 178, 0.1); color: #00FFB2; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(0, 255, 178, 0.2); }
-    
-    .badge-high { color: #FF4D6D !important; font-weight: bold; text-shadow: 0 0 8px rgba(255, 77, 109, 0.6); background: rgba(255, 77, 109, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 77, 109, 0.3); }
-    .badge-medium { color: #FACC15 !important; font-weight: bold; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); background: rgba(250, 204, 21, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(250, 204, 21, 0.3); }
-    .badge-low { color: #00D1FF !important; font-weight: bold; background: rgba(0, 209, 255, 0.1); padding: 2px 6px; border-radius: 4px; }
+
+html, body, [class*="css"], [data-testid="stAppViewContainer"] {
+    background-color: #030611 !important;
+    color: #E2E8F0 !important;
+    font-family: 'SF Pro Display', sans-serif;
+}
+
+/* HEADER */
+.main-header {
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+}
+
+/* CARDS */
+.crypto-card {
+    background: rgba(11,18,36,0.88);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00FFB2;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+}
+
+.crypto-card.blue {
+    border-left: 4px solid #00D1FF;
+}
+
+.crypto-card.purple {
+    border-left: 4px solid #7C3AED;
+}
+
+.crypto-card.warning {
+    border-left: 4px solid #FACC15;
+}
+
+.crypto-card.danger {
+    border-left: 4px solid #FF4D6D;
+}
+
+.crypto-card.ai {
+    border-left: 4px solid #A855F7;
+}
+
+.hud-title {
+    color: #64748B;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.hud-value {
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.green {
+    color: #00FFB2;
+}
+
+.red {
+    color: #FF4D6D;
+}
+
+.blue {
+    color: #00D1FF;
+}
+
+.purple {
+    color: #A855F7;
+}
+
+.yellow {
+    color: #FACC15;
+}
+
+/* NEWS TICKER */
+.ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    background: rgba(11,18,36,0.95);
+    border-bottom: 1px solid rgba(0,255,178,0.15);
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+
+.ticker {
+    display: inline-block;
+    white-space: nowrap;
+    animation: tickerMove 35s linear infinite;
+}
+
+.ticker-item {
+    display: inline-block;
+    padding-right: 60px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+@keyframes tickerMove {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# NEWS BANNER STRIP INJECTION (LEFT TO RIGHT MOVING)
+# NEWS BANNER
 # =========================================================
 st.markdown("""
 <div class="ticker-wrap">
     <div class="ticker">
-        <span class="ticker-item" style="color:#00FFB2;">🔥 XAUUSD MARKET FEED: Gold Approaching Key Short-Term Resistance Hurdles</span>
-        <span class="ticker-item" style="color:#00D1FF;">⚡ CENTRAL BANK FLUIDITY: Physical Nonmonetary Gold Exports surge in Global Q1 Flows</span>
-        <span class="ticker-item" style="color:#FF4D6D;">⚠️ RISK NOTE: CME FedWatch confirms macro markets pricing out remaining policy adjustments</span>
-        <span class="ticker-item" style="color:#FACC15;">📊 COMMODITY TARGETS: Tier-1 Desks maintain macro baseline targets toward $5,000</span>
+        <span class="ticker-item" style="color:#00FFB2;">
+            🔥 XAUUSD MARKET FEED: Gold Approaching Key Resistance Levels
+        </span>
+
+        <span class="ticker-item" style="color:#00D1FF;">
+            ⚡ FED WATCH: Traders Pricing Lower Rate Cuts
+        </span>
+
+        <span class="ticker-item" style="color:#FF4D6D;">
+            ⚠️ VOLATILITY ALERT: US Session Expected To Expand Range
+        </span>
+
+        <span class="ticker-item" style="color:#FACC15;">
+            📊 GOLD TARGETS: Institutional Desks Watching $5000 Long Term
+        </span>
     </div>
 </div>
-<br><br>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 1. COLLAPSABLE SIDE PANEL (RISK CALCULATOR)
+# SIDEBAR
 # =========================================================
-st.sidebar.markdown("<p style='font-weight:800; color:#00D1FF; margin-bottom:2px;'>🧮 ACCOUNT POSITION CALCULATORS</p>", unsafe_allow_html=True)
-risk_cash_input = st.sidebar.number_input("Max Cash Allowed at Risk ($)", min_value=1.0, value=500.00, step=50.0)
-sl_distance_usd = st.sidebar.number_input("Stop Loss Distance (In Dollars eg. $10.00)", min_value=0.1, value=10.00, step=0.50)
+st.sidebar.markdown("## 🧮 Position Calculator")
 
-# GOLD POSITION SIZING FORMULA
-calculated_lots = risk_cash_input / sl_distance_usd if sl_distance_usd > 0 else 0.01
-take_profit_distance_usd = st.sidebar.number_input("Take Profit Target (In Dollars eg. $20.00)", min_value=0.1, value=20.00, step=1.00)
-profit_potential = calculated_lots * take_profit_distance_usd * 100
+risk_cash_input = st.sidebar.number_input(
+    "Risk Amount ($)",
+    min_value=1.0,
+    value=500.0,
+    step=50.0
+)
+
+sl_distance_usd = st.sidebar.number_input(
+    "Stop Loss Distance ($)",
+    min_value=0.1,
+    value=10.0,
+    step=0.5
+)
+
+tp_distance_usd = st.sidebar.number_input(
+    "Take Profit Distance ($)",
+    min_value=0.1,
+    value=20.0,
+    step=1.0
+)
+
+calculated_lots = risk_cash_input / sl_distance_usd
+profit_potential = calculated_lots * tp_distance_usd * 100
 
 st.sidebar.markdown(f"""
-<div style='background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(0, 255, 178, 0.2); padding: 12px; border-radius: 8px;'>
-    <div style='font-size:11px; color:#64748B;'>3. SUGGESTED CONTRACT POSITION SIZING</div>
-    <div style='font-size:22px; font-weight:800; color:#00FFB2; margin-bottom:8px;'>{calculated_lots:.2f} <span style='font-size:12px; color:#64748B;'>LOTS</span></div>
-    <div style='font-size:11px; color:#00D1FF;'>4. TOTAL GROSS PROFIT POTENTIAL</div>
-    <div style='font-size:22px; font-weight:800; color:#00D1FF;'>${profit_potential:,.2f}</div>
+<div class="crypto-card">
+    <div class="hud-title">Suggested Lots</div>
+    <div class="hud-value green">{calculated_lots:.2f}</div>
+
+    <div class="hud-title" style="margin-top:15px;">Profit Potential</div>
+    <div class="hud-value blue">${profit_potential:,.2f}</div>
 </div>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# SYSTEM DASHBOARD NAVIGATION TABS
+# TABS
 # =========================================================
-tab_dashboard, tab_accounts, tab_search_charts = st.tabs(["📊 Live Terminal Dashboard", "🏦 Account Manager Node", "🔍 Asset Search & TradingView Charts"])
+tab1, tab2, tab3 = st.tabs([
+    "📊 Dashboard",
+    "🏦 Account Manager",
+    "📺 Live Charts"
+])
 
 # =========================================================
-# TAB 1: LIVE TERMINAL DASHBOARD
+# TAB 1 - DASHBOARD
 # =========================================================
-with tab_dashboard:
-    hdr_left, hdr_right = st.columns(2)
-    with hdr_left: 
-        st.markdown(f"<span class='main-header'>Active Account: {st.session_state['active_account']}</span>", unsafe_allow_html=True)
-    with hdr_right: 
-        st.markdown(f"<div style='text-align:right; font-family:monospace; font-size:12px; margin-top:8px;'>STATUS: {st.session_state['terminal_status']}</div>", unsafe_allow_html=True)
+with tab1:
 
-    # 10. REAL-TIME HUD CARD GRID CONFIGURATION
-    m1, m2, m3, m4, m5 = st.columns(5)
-    floating_yield = st.session_state["equity"] - st.session_state["balance"]
+    left, right = st.columns([3,1])
 
-    with m1: 
-        f_card = "crypto-card danger" if floating_yield < 0 else "crypto-card"
-        f_text = "neon-text-red" if floating_yield < 0 else "neon-text-green"
-        st.markdown(f"<div class='{f_card}'><div class='hud-title'>Open Floating Yield</div><div class='hud-value {f_text}'>${floating_yield:,.2f}</div></div>", unsafe_allow_html=True)
-    with m2: 
-        st.markdown(f"<div class='crypto-card purple'><div class='hud-title'>Current Account Equity</div><div class='hud-value' style='color:#7C3AED;'>${st.session_state['equity']:,.2f}</div></div>", unsafe_allow_html=True)
-    with m3: 
-        st.markdown(f"<div class='crypto-card'><div class='hud-title'>Balance</div><div class='hud-value neon-text-green'>${st.session_state['balance']:,.2f}</div></div>", unsafe_allow_html=True)
-    with m4: 
-        st.markdown(f"<div class='crypto-card blue'><div class='hud-title'>Free Margin Cushion</div><div class='hud-value neon-text-blue'>${st.session_state['free_margin']:,.2f}</div></div>", unsafe_allow_html=True)
-    with m5: 
-        m_lvl_text = f"{st.session_state['margin_level']}%" if st.session_state['margin_level'] > 0 else "0.0% (No Load)"
-        st.markdown(f"<div class='crypto-card warning'><div class='hud-title'>Margin Level %</div><div class='hud-value' style='color:#FACC15;'>{m_lvl_text}</div></div>", unsafe_allow_html=True)
-
-    # 🛡️ FTMO OBJECTIVE SAFETY GUARD HUB
-    st.markdown("### 🛡️ Prop Firm Trading Objective Allocation Safety Guards")
-    pg1, pg2, pg3 = st.columns(3)
-    
-    initial_prop_size = 100000.00
-    daily_drawdown_limit = initial_prop_size * 0.05   
-    total_drawdown_limit = initial_prop_size * 0.10   
-    current_total_loss = initial_prop_size - st.session_state["equity"]
-    remaining_to_lose_before_fail = total_drawdown_limit - current_total_loss if current_total_loss > 0 else total_drawdown_limit
-    
-    with pg1:
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Daily Loss Limit</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${daily_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
-    with pg2:
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Max Total Loss Limit</div><div style='font-size:20px; font-weight:800; color:#FF4D6D;'>${total_drawdown_limit:,.2f}</div></div>", unsafe_allow_html=True)
-    with pg3:
-        st.markdown(f"<div class='crypto-card prop-guard'><div class='hud-title'>Remaining Total Loss Buffer</div><div style='font-size:20px; font-weight:800; color:#00FFB2;'>${remaining_to_lose_before_fail:,.2f}</div></div>", unsafe_allow_html=True)
-
-    # World-First AI Order Flow Sentiment Engine Panel
-    st.markdown("### 🧠 Autonomous AI Market Sentiment Engine (XAUUSD Alpha Pulse)")
-    ai_col1, ai_col2, ai_col3 = st.columns(3)
-    with ai_col1:
-        st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>AI Trade Bias Matrix</div><div style='font-size:20px; font-weight:800; color:#A78BFA;'>STRONG BULLISH EXPANSION</div></div>", unsafe_allow_html=True)
-    with ai_col2:
-        st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Market Exhaustion Index</div><div style='font-size:20px; font-weight:800; color:#00FFB2;'>14.2% [Low Volatility Reversal]</div></div>", unsafe_allow_html=True)
-    with ai_col3:
-        st.markdown(f"<div class='crypto-card ai-glow'><div class='hud-title'>Institutional Liquidity Sweep Target</div><div style='font-size:20px; font-weight:800; color:#00D1FF;'>$2,368.50</div></div>", unsafe_allow_html=True)
-
-    # 11. STREAMING MONITOR WATCHLIST
-    st.markdown("### ⚡ Open Positions Watchlist")
-    if abs(floating_yield) > 0.01:
-        open_positions_mock = [
-            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
-        ]
-        st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
-    else:
-        st.info("No active open positions loaded on your synchronized terminal profile workspace.")
-
-    layout_left, layout_right = st.columns([1, 1.2])
-    with layout_left:
-        st.markdown("### 📅 High-Impact Economic Calendar")
-        calendar_events = [
-            {"Time (EST)": "01:00 AM", "Currency": "GBP", "Event": "Claimant Count Change", "Impact": "HIGH", "Forecast": "23.1K", "Actual": "26.5K"},
-            {"Time (EST)": "07:00 AM", "Currency": "USD", "Event": "FOMC Member Waller Speaks", "Impact": "HIGH", "Forecast": "--", "Actual": "Speech"},
-            {"Time (EST)": "07:15 AM", "Currency": "USD", "Event": "ADP Weekly Employment Change", "Impact": "MEDIUM", "Forecast": "33.0K", "Actual": "42.3K"},
-            {"Time (EST)": "08:30 AM", "Currency": "USD", "Event": "Core Retail Sales m/m", "Impact": "HIGH", "Forecast": "0.1%", "Actual": "0.3%"}
-        ]
-        df_cal = pd.DataFrame(calendar_events)
-        df_cal["Impact"] = df_cal["Impact"].apply(lambda v: f'<span class="badge-high">HIGH RISK</span>' if v == "HIGH" else (f'<span class="badge-medium">MED RISK</span>' if v == "MEDIUM" else '<span class="badge-low">LOW</span>'))
-        st.write(df_cal.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-    with layout_right:
-        st.markdown("### 📊 Factual Commodity Matrix Index")
-        dates_gen = [datetime.now() - timedelta(days=i) for i in range(15)]
-        df_historical = pd.DataFrame({
-            "Trading Date": [d.strftime('%Y-%m-%d') for d in dates_gen],
-            "Instrument Pair": ["XAUUSD"] * 15,
-            "Market Close Bid ($)": [round(2350.0 + (i * 4.2), 2) for i in range(15)]
-        })
-        fig_equity = go.Figure()
-        fig_equity.add_trace(go.Scatter(x=dates_gen, y=df_historical["Market Close Bid ($)"], mode="lines+markers", line=dict(color="#00FFB2", width=3), fill="tozeroy", fillcolor="rgba(0, 255, 178, 0.02)"))
-        fig_equity.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#94A3B8"), height=240,
-            margin=dict(l=20, r=20, t=20, b=20), xaxis=dict(gridcolor="rgba(255,255,255,0.02)"), yaxis=dict(gridcolor="rgba(255,255,255,0.02)")
+    with left:
+        st.markdown(
+            f"<div class='main-header'>{st.session_state['active_account']}</div>",
+            unsafe_allow_html=True
         )
-        st.plotly_chart(fig_equity, use_container_width=True)
 
-# =========================================================
-# TAB 2: ACCOUNT MANAGEMENT NODE
-# =========================================================
-with tab_accounts:
-    st.markdown("### 🏦 Multi-Broker Connection Hub")
-    st.write("Enter your active parameters below to manually bind metrics directly onto your interface cards.")
-    
-    col_sel, col_inputs = st.columns(2)
-    with col_sel:
-        target_broker = st.radio("Select Target Infrastructure", ["Exness Live Terminal", "XM Global Node", "FTMO Prop Client"])
-    
-    with col_inputs:
-        input_id = st.number_input("Broker Account Number / Login ID", value=1513449340)
-        input_bal = st.number_input("Factual Account Balance ($)", value=100000.50, step=10.0)
-        input_equ = st.number_input("Factual Account Equity ($)", value=100000.50, step=10.0)
-        input_margin = st.number_input("Factual Free Margin ($)", value=100000.50, step=10.0)
-        input_server = st.text_input("Server Sub-Domain Routing Name", value="FTMO-Demo")
-        
-        if st.button("🔌 Force Secure Cloud Update", use_container_width=True):
-            st.session_state["active_account"] = f"{target_broker} (#{input_id})"
-            st.session_state["terminal_status"] = f"🟢 SYNC TO {input_server.upper()}"
-            st.session_state["balance"] = input_bal
-            st.session_state["equity"] = input_equ
-            st.session_state["free_margin"] = input_margin
-            st.session_state["margin_level"] = round((input_equ / (input_equ - input_margin)) * 100, 1) if (input_equ - input_margin) > 0 else 0.0
-            st.success("State metrics applied! All top display boxes updated successfully.")
-            st.rerun()
+    with right:
+        st.markdown(
+            f"<div style='text-align:right; margin-top:15px;'>{st.session_state['terminal_status']}</div>",
+            unsafe_allow_html=True
+        )
 
-# =========================================================
-# TAB 3: 100% UNBLOCKED DIRECT TRADINGVIEW CLOUD ENGINE
-# =========================================================
-with tab_search_charts:
-    st.markdown("### 🔍 6. Global Market Search Asset Hub")
-    
-    c_search, c_layout = st.columns(2)
-    with c_search:
-        search_query = st.text_input("Enter Asset Ticker Symbol (e.g. XAUUSD, BTCUSDT, EURUSD, SPX)", value=st.session_state["selected_ticker"])
-    with c_layout:
-        layout_selection = st.selectbox("Select Workspace Multi-Chart Grid Profile", ["Single Chart Layout", "2-Chart Split Matrix Grid", "4-Chart Comprehensive Matrix Grid"])
-    
-    if st.button("🎯 Update Workspace Chart Environment", use_container_width=True):
-        st.session_state["selected_ticker"] = search_query.upper().strip()
-        st.session_state["grid_layout"] = layout_selection
-        st.rerun()
-        
-    st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
-    
-    # ⚡ AUTOMATED NATIVE WIDGET ENGINE: Bypasses script tags and iframe protocol security blocks completely
-    def create_native_unblocked_tv_widget(ticker_string, timeframe="D"):
-        sym = ticker_string.upper().strip()
-        if "OANDA" not in sym and "BINANCE" not in sym and "NASDAQ" not in sym and "TVC" not in sym:
-            if sym in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]: sym = f"OANDA:{sym}"
-            elif sym in ["BTCUSDT", "ETHUSDT"]: sym = f"BINANCE:{sym}"
-            else: sym = f"TVC:{sym}"
-            
-        # Official TradingView JSON schema injection bypasses browser security boundaries entirely
-        raw_tv_html = f"""
-        <div style="height:600px; width:100%; background-color:#030611;">
-            <iframe 
-                src="https://tradingview.com{sym}&interval={timeframe}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true&locale=en" 
-                style="width: 100%; height: 600px; border: none; border-radius: 12px;" 
-                allowfullscreen>
-            </iframe>
+    floating = st.session_state["equity"] - st.session_state["balance"]
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    with c1:
+        color = "red" if floating < 0 else "green"
+
+        st.markdown(f"""
+        <div class="crypto-card danger">
+            <div class="hud-title">Floating P/L</div>
+            <div class="hud-value {color}">
+                ${floating:,.2f}
+            </div>
         </div>
-        """
-        return raw_tv_html
+        """, unsafe_allow_html=True)
 
-    # Grid compilation pipelines using raw HTML injection
+    with c2:
+        st.markdown(f"""
+        <div class="crypto-card purple">
+            <div class="hud-title">Equity</div>
+            <div class="hud-value purple">
+                ${st.session_state['equity']:,.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c3:
+        st.markdown(f"""
+        <div class="crypto-card">
+            <div class="hud-title">Balance</div>
+            <div class="hud-value green">
+                ${st.session_state['balance']:,.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c4:
+        st.markdown(f"""
+        <div class="crypto-card blue">
+            <div class="hud-title">Free Margin</div>
+            <div class="hud-value blue">
+                ${st.session_state['free_margin']:,.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c5:
+        st.markdown(f"""
+        <div class="crypto-card warning">
+            <div class="hud-title">Margin Level</div>
+            <div class="hud-value yellow">
+                {st.session_state['margin_level']:.1f}%
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # =====================================================
+    # AI PANELS
+    # =====================================================
+    st.markdown("## 🧠 AI Market Engine")
+
+    a1, a2, a3 = st.columns(3)
+
+    with a1:
+        st.markdown("""
+        <div class="crypto-card ai">
+            <div class="hud-title">AI Bias</div>
+            <div class="hud-value purple">
+                STRONG BULLISH
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with a2:
+        st.markdown("""
+        <div class="crypto-card ai">
+            <div class="hud-title">Volatility</div>
+            <div class="hud-value green">
+                LOW REVERSAL
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with a3:
+        st.markdown("""
+        <div class="crypto-card ai">
+            <div class="hud-title">Liquidity Target</div>
+            <div class="hud-value blue">
+                2368.50
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # =====================================================
+    # CHART
+    # =====================================================
+    st.markdown("## 📈 Commodity Matrix")
+
+    dates = [datetime.now() - timedelta(days=i) for i in range(15)]
+
+    prices = [2350 + i * 4 for i in range(15)]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=prices,
+        mode="lines+markers",
+        fill="tozeroy"
+    ))
+
+    fig.update_layout(
+        height=350,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="white")
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+# =========================================================
+# TAB 2 - ACCOUNT MANAGER
+# =========================================================
+with tab2:
+
+    st.markdown("## 🏦 Account Management")
+
+    broker = st.selectbox(
+        "Broker",
+        [
+            "FTMO",
+            "Exness",
+            "XM",
+            "IC Markets"
+        ]
+    )
+
+    account_id = st.number_input(
+        "Account Number",
+        value=1513449340
+    )
+
+    balance = st.number_input(
+        "Balance",
+        value=100000.50
+    )
+
+    equity = st.number_input(
+        "Equity",
+        value=100000.50
+    )
+
+    free_margin = st.number_input(
+        "Free Margin",
+        value=100000.50
+    )
+
+    server = st.text_input(
+        "Server",
+        value="FTMO-Demo"
+    )
+
+    if st.button("🔌 Sync Account"):
+
+        used_margin = max(equity - free_margin, 1)
+        margin_level = (equity / used_margin) * 100
+
+        st.session_state["active_account"] = f"{broker} (#{account_id})"
+        st.session_state["terminal_status"] = f"🟢 SYNC TO {server.upper()}"
+        st.session_state["balance"] = balance
+        st.session_state["equity"] = equity
+        st.session_state["free_margin"] = free_margin
+        st.session_state["margin_level"] = margin_level
+
+        st.success("Account synced successfully.")
+
+# =========================================================
+# TRADINGVIEW FUNCTION
+# =========================================================
+def create_tradingview_widget(symbol="OANDA:XAUUSD", interval="15"):
+
+    html_code = f"""
+    <div class="tradingview-widget-container">
+        <div id="tradingview_chart"></div>
+
+        <script
+            type="text/javascript"
+            src="https://s3.tradingview.com/tv.js">
+        </script>
+
+        <script type="text/javascript">
+
+        new TradingView.widget(
+        {{
+            "autosize": true,
+            "symbol": "{symbol}",
+            "interval": "{interval}",
+            "timezone": "Africa/Johannesburg",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#030611",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "container_id": "tradingview_chart"
+        }});
+
+        </script>
+    </div>
+    """
+
+    return html_code
+
+# =========================================================
+# TAB 3 - LIVE CHARTS
+# =========================================================
+with tab3:
+
+    st.markdown("## 📺 Live TradingView Charts")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        search_query = st.text_input(
+            "Ticker Symbol",
+            value=st.session_state["selected_ticker"]
+        )
+
+    with col2:
+        layout_selection = st.selectbox(
+            "Chart Layout",
+            [
+                "Single Chart Layout",
+                "2-Chart Split Matrix Grid",
+                "4-Chart Comprehensive Matrix Grid"
+            ]
+        )
+
+    if st.button("🎯 Load Live Charts"):
+
+        st.session_state["selected_ticker"] = search_query.upper()
+        st.session_state["grid_layout"] = layout_selection
+
+    ticker = st.session_state["selected_ticker"]
+
+    # =====================================================
+    # AUTO SYMBOL MAPPING
+    # =====================================================
+    if ":" not in ticker:
+
+        if ticker in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]:
+            ticker = f"OANDA:{ticker}"
+
+        elif ticker in ["BTCUSDT", "ETHUSDT"]:
+            ticker = f"BINANCE:{ticker}"
+
+        elif ticker in ["NAS100", "US30", "SPX500"]:
+            ticker = f"TVC:{ticker}"
+
+        else:
+            ticker = f"TVC:{ticker}"
+
+    st.markdown(f"### 🔥 {ticker}")
+
+    # =====================================================
+    # SINGLE CHART
+    # =====================================================
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
-        
+
+        st.components.v1.html(
+            create_tradingview_widget(ticker, "15"),
+            height=700
+        )
+
+    # =====================================================
+    # 2 CHART LAYOUT
+    # =====================================================
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
-        grid_col1, grid_col2 = st.columns(2)
-        with grid_col1: 
-            st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "15"), height=620, scrolling=False)
-        with grid_col2: 
-            st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
-            
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+
+            st.markdown("#### 15 Minute")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "15"),
+                height=600
+            )
+
+        with c2:
+
+            st.markdown("#### Daily")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "D"),
+                height=600
+            )
+
+    # =====================================================
+    # 4 CHART GRID
+    # =====================================================
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
-        r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "5"), height=620, scrolling=False)
-        with r1_c2: st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "15"), height=620, scrolling=False)
-        r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "240"), height=620, scrolling=False)
-        with r2_c2: st.components.v1.html(create_native_unblocked_tv_widget(st.session_state["selected_ticker"], "D"), height=620, scrolling=False)
+
+        r1c1, r1c2 = st.columns(2)
+
+        with r1c1:
+
+            st.markdown("#### 5 Minute")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "5"),
+                height=500
+            )
+
+        with r1c2:
+
+            st.markdown("#### 15 Minute")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "15"),
+                height=500
+            )
+
+        r2c1, r2c2 = st.columns(2)
+
+        with r2c1:
+
+            st.markdown("#### 4 Hour")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "240"),
+                height=500
+            )
+
+        with r2c2:
+
+            st.markdown("#### Daily")
+
+            st.components.v1.html(
+                create_tradingview_widget(ticker, "D"),
+                height=500
+            )
