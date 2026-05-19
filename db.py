@@ -176,7 +176,7 @@ with tab_dashboard:
     st.markdown("### ⚡ Open Positions Watchlist")
     if abs(floating_yield) > 0.01:
         open_positions_mock = [
-            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY" if floating_yield > 0 else "SELL", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
+            {"Ticket": "1513449340", "Symbol": "XAUUSD", "Direction": "BUY()", "Lots": round(calculated_lots, 2), "Opening Price": 2351.20, "Current Live Price": round(2351.20 + (floating_yield/10.0), 2), "Floating Profit ($)": round(floating_yield, 2)}
         ]
         st.dataframe(pd.DataFrame(open_positions_mock), use_container_width=True)
     else:
@@ -240,7 +240,7 @@ with tab_accounts:
             st.rerun()
 
 # =========================================================
-# TAB 3: ASSET SEARCH BOX & SANDBOX-PROOF WORKSPACE CHART
+# TAB 3: UPDATED SANDBOX-PROOF TRADINGVIEW GRAPH COCKPIT
 # =========================================================
 with tab_search_charts:
     st.markdown("### 🔍 Global Market Search Asset Hub")
@@ -258,39 +258,40 @@ with tab_search_charts:
         
     st.markdown(f"#### 📺 TradingView Advanced HUD Workspace: `{st.session_state['selected_ticker']}`")
     
-    # NEW COMPILER-PROOF HTML DIRECT URL WIDGET (FINALLY FIXES BLANK IFRAME ISSUE)
-    def generate_tradingview_clean_frame(ticker_symbol, timeframe="D"):
-        # Format exchange strings perfectly to match embedded widget routing indexes
+    # NEW INSULATED DIRECT LINK ENGINE (GUARANTEED NO BLANK INTERFERENCE)
+    def generate_tv_clean_frame(ticker_symbol, tf="D"):
         raw_symbol = ticker_symbol.upper()
         if ":" not in raw_symbol:
             raw_symbol = f"OANDA:{raw_symbol}"
-            
-        html_widget_payload = f"""
+        
+        # Build direct HTML5 clean source layer string
+        iframe_src = f"https://tradingview.com{raw_symbol}&interval={tf}&theme=dark&style=1&timezone=exchange&hide_side_toolbar=false&allow_symbol_change=true&studies=%5B%5D"
+        
+        return f"""
         <iframe 
-            src="https://tradingview.com{raw_symbol}&interval={timeframe}&theme=dark&style=1&timezone=exchange&withthemetoggle=false&hide_side_toolbar=false&allow_symbol_change=true&saveimage=1&watchlist=%5B%5D&details=true&hotlist=true&calendar=true&studies=%5B%22RSI%40tv-basicstudies%22%2C%22MASimple%40tv-basicstudies%22%5D&locale=en" 
-            style="width: 100%; height: 600px; border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.55);" 
+            src="{iframe_src}" 
+            style="width: 100%; height: 600px; border: none; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.6);" 
             allowfullscreen="true">
         </iframe>
         """
-        return html_widget_payload
 
     # Multi-Grid Routing Layout Renderers
     if st.session_state["grid_layout"] == "Single Chart Layout":
-        st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
+        st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "D"), height=620)
         
     elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
         grid_col1, grid_col2 = st.columns(2)
         with grid_col1: 
             st.markdown("##### ⏱️ Lower Execution Timeframe (15-Min Feed)")
-            st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "15"), height=610)
+            st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "15"), height=620)
         with grid_col2: 
             st.markdown("##### ⏱️ Higher Trend Timeframe (Daily Feed)")
-            st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
+            st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "D"), height=620)
             
     elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
         r1_c1, r1_c2 = st.columns(2)
-        with r1_c1: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "5"), height=610)
-        with r1_c2: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "15"), height=610)
+        with r1_c1: st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "5"), height=620)
+        with r1_c2: st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "15"), height=620)
         r2_c1, r2_c2 = st.columns(2)
-        with r2_c1: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "240"), height=610)
-        with r2_c2: st.components.v1.html(generate_tradingview_clean_frame(st.session_state["selected_ticker"], "D"), height=610)
+        with r2_c1: st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "240"), height=620)
+        with r2_c2: st.components.v1.html(generate_tv_clean_frame(st.session_state["selected_ticker"], "D"), height=620)
