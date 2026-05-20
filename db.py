@@ -64,6 +64,14 @@ def add_custom_trade_log(asset, killzone, signature, outcome, profit):
     conn.commit()
     conn.close()
 
+def clear_performance_history():
+    """Wipes all rows from the strategic performance log database table."""
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM strategy_performance")
+    conn.commit()
+    conn.close()
+
 def get_performance_history():
     conn = sqlite3.connect(DB_FILE)
     df = pd.read_sql_query("SELECT timestamp AS 'Session Timestamp', asset AS 'Asset', killzone AS 'Killzone Block', signature AS 'Strategy Signature', outcome AS 'Outcome Status', profit AS 'Net Result ($)' FROM strategy_performance ORDER BY id DESC", conn)
@@ -127,31 +135,13 @@ if "loss_alert_hit" not in st.session_state:
     st.session_state.loss_alert_hit = False
 if "last_logged_account" not in st.session_state:
     st.session_state.last_logged_account = None
-if "last_activity_time" not in st.session_state:
-    st.session_state.last_activity_time = time.time()
-
-SESSION_TIMEOUT_SECONDS = 300
-current_interaction_time = time.time()
-inactivity_duration = current_interaction_time - st.session_state.last_activity_time
-st.session_state.last_activity_time = current_interaction_time
 
 # -------------------------------------------------------------------
-# SIDE PANEL CONTROLS & GATEWAY LOCKOUT SYSTEM
+# 1. COLLAPSIBLE SIDE PANEL CONTROLS
 # -------------------------------------------------------------------
 with st.sidebar:
     st.title("⚙️ Control Panel")
-    st.subheader("🔐 Terminal Security Gateway")
-    APP_SECRET_PASSCODE = "PRO77" 
-    input_passcode = st.text_input("Enter Supervisor Pin:", type="password")
-    
-    if inactivity_duration > SESSION_TIMEOUT_SECONDS:
-        st.error("🔴 Session Timed Out. Please re-enter PIN.")
-        st.stop()
-    if input_passcode != APP_SECRET_PASSCODE:
-        st.error("Access Denied.")
-        st.stop()
-        
-    st.success("Access Authorized")
+    st.write("Manage calculation variables and safety margins.")
     st.divider()
     
     user_cash_risk = st.number_input("Base Cash Amount at Risk ($):", min_value=0.0, value=500.0, step=50.0)
@@ -162,7 +152,7 @@ with st.sidebar:
     enable_audio = st.checkbox("Enable Audio Alerts", value=True)
     profit_threshold = st.number_input("Profit Sound Above ($):", value=400.0, step=50.0)
     loss_threshold = st.number_input("Loss Sound Below ($):", value=-300.0, step=50.0)
-    st.caption("IMMACULATE GOLD PRO v6.0")
+    st.caption("IMMACULATE GOLD PRO v6.5")
 
 # NEWS BANNER
 news_headlines = [
@@ -198,9 +188,9 @@ def generate_algorithmic_signals(ticker):
     trendline_break = "✅ CONFIRMED - H1 Bearish Trendline Broken on Volume"
     snr_rejection = "🔒 COMPLETED - Retested Malaysian Fresh Gap and H4 Unmitigated FVG Border"
     
-    bias = "STRONG BUY" if ticker == "XAUUSD" else "SELL LIMIT"
-    tp_target = 2365.00 if ticker == "XAUUSD" else 1.0710
-    sl_target = 2304.00 if ticker == "XAUUSD" else 1.0895
+    bias = "STRONG BUY" if "XAU" in ticker or "BTC" in ticker or "US30" in ticker else "SELL LIMIT"
+    tp_target = 2365.00 if "XAU" in ticker else 1.0920
+    sl_target = 2304.00 if "XAU" in ticker else 1.0780
     
     return htf_status, active_killzone, liquidity_sweep, trendline_break, snr_rejection, bias, tp_target, sl_target
 
@@ -209,7 +199,7 @@ def generate_algorithmic_signals(ticker):
 # -------------------------------------------------------------------
 perf_df = get_performance_history()
 total_trades = len(perf_df)
-wins = len(perf_df[perf_df["Outcome Status"] == "TARGET ACHIEVED (TP)"])
+wins = len(perf_df[perf_df["Outcome Status"].str.contains("TARGET")])
 win_rate = (wins / total_trades) * 100 if total_trades > 0 else 50.0
 
 gross_profits = perf_df[perf_df["Net Result ($)"] > 0]["Net Result ($)"].sum()
@@ -252,10 +242,19 @@ with tab2:
 with tab1:
     search_grid_1, search_grid_2 = st.columns(2)
     with search_grid_1:
-        asset_class_filter = st.selectbox("Market Asset Category:", ["Commodities", "Forex", "Futures"])
-    asset_dictionary = {"Commodities": ["XAUUSD", "USOIL"], "Forex": ["EURUSD", "GBPUSD"], "Futures": ["ES1!", "NQ1!"]}
+        asset_class_filter = st.selectbox("Market Asset Category:", ["Commodities", "Forex", "Futures", "Indices", "Crypto"])
+    
+    # Expanded customized cross-asset tracking list configurations
+    asset_dictionary = {
+        "Commodities": ["XAUUSD (Gold)", "XAGUSD (Silver)", "USOIL (Crude)", "UKOIL (Brent)"], 
+        "Forex": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "GBPJPY"],
+        "Futures": ["ES1! (S&P E-Mini)", "NQ1! (Nasdaq E-Mini)", "YM1! (Dow E-Mini)", "GC1! (Gold Futures)"],
+        "Indices": ["SPX500", "NAS100", "US30", "GER40", "UK100"],
+        "Crypto": ["BTCUSD (Bitcoin)", "ETHUSD (Ethereum)", "SOLUSD (Solana)", "XRPUSD (Ripple)"]
+    }
     with search_grid_2:
-        active_ticker_symbol = st.selectbox("Ticker Target:", asset_dictionary[asset_class_filter])
+        active_ticker_raw = st.selectbox("Ticker Target:", asset_dictionary[asset_class_filter])
+        active_ticker_symbol = active_ticker_raw.split(" ")[0] # Strip visual descriptive subtitles
 
     # Execute Signals Calculation Pipeline
     htf, killzone, liq_sweep, tl_break, m_snr, final_bias, target_tp, target_sl = generate_algorithmic_signals(active_ticker_symbol)
@@ -315,7 +314,7 @@ with tab1:
 
     # INTERACTIVE SLIDERS SIMULATION & OVERRIDES
     st.markdown("### 🎛️ Live Simulation Sandbox & Trade Outcome Logger")
-    with st.expander("Deploy Manual Backtest Slider Overrides"):
+    with st.expander("Deploy Manual Backtest Slider Overrides & Sandbox Purge Options"):
         slider_col1, slider_col2, slider_col3 = st.columns(3)
         with slider_col1:
             sim_killzone = st.select_slider("Select Test Timeblock Node:", options=["London Open (Q1)", "London Open (Q2)", "NY Open (Q1)", "NY Open (Q2)"])
@@ -324,9 +323,20 @@ with tab1:
             sim_outcome = st.radio("Simulated Target Outcome Status:", ["TARGET ACHIEVED (TP)", "STOP LOSS BREACH (SL)"])
         with slider_col3:
             sim_profit = st.slider("Net Theoretical Performance Return ($):", min_value=-1500.0, max_value=3000.0, value=500.0, step=50.0)
-            if st.button("⚡ Commit Result to Performance Ledger"):
-                add_custom_trade_log(active_ticker_symbol, sim_killzone, sim_strategy, sim_outcome, sim_profit)
-                st.rerun()
+            
+            # Button Actions Matrix Block
+            btn_col1, btn_col2 = st.columns(2)
+            with btn_col1:
+                if st.button("⚡ Log Custom Trade"):
+                    add_custom_trade_log(active_ticker_symbol, sim_killzone, sim_strategy, sim_outcome, sim_profit)
+                    st.rerun()
+            with btn_col2:
+                # 🔄 Sandbox Reset Button Implementation
+                if st.button("🗑️ Reset Database", help="Clears custom overrides and resets the tracking log matrix"):
+                    clear_performance_history()
+                    st.toast("Performance tracker reset to standard default baseline.")
+                    time.sleep(0.5)
+                    st.rerun()
 
     # STRATEGIC SIGNAL ACCURACY & VERIFICATION LEDGER
     st.markdown("### 📈 Strategic Signal Accuracy & Verification Ledger")
@@ -343,13 +353,14 @@ with tab1:
 # TRADINGVIEW FRAMEWORK
 with tab3:
     st.subheader(f"TradingView Advanced Canvas — {active_ticker_symbol}")
-    resolved_exchange = "FX_IDC" if active_ticker_symbol == "XAUUSD" else "OANDA"
+    resolved_exchange = "BINANCE" if asset_class_filter == "Crypto" else "OANDA"
+    if asset_class_filter == "Futures":
+        resolved_exchange = "CME"
+        
     tradingview_widget_frame = f"""<iframe src="https://tradingview.com{resolved_exchange}%3A{active_ticker_symbol}&interval=15&theme=dark" width="100%" height="650" frameborder="0" style="border-radius: 12px; border: 1px solid #1c1f33;"></iframe>"""
     st.components.v1.html(tradingview_widget_frame, height=660)
 
-# -------------------------------------------------------------------
 # DATA LOGS & AUTOMATED CSV BATCH IMPORTER ENGINE
-# -------------------------------------------------------------------
 with tab4:
     st.header("🗄️ Automated Strategy CSV Batch Importer & Logs")
     st.write("Upload a historical batch file (with columns: `asset,killzone,signature,outcome,profit`) to bulk-update your statistical dashboard metrics.")
