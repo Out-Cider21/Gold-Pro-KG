@@ -21,3 +21,20 @@ def init_database():
         profit REAL
     )
     ''')
+
+    conn.commit()
+    conn.close()
+
+
+def get_trade_history():
+
+    conn = sqlite3.connect(DB_FILE)
+
+    df = pd.read_sql_query(
+        "SELECT * FROM trades ORDER BY id DESC",
+        conn
+    )
+
+    conn.close()
+
+    return df
