@@ -1,5 +1,11 @@
-pandas
+streamlit
+streamlit-autorefresh
 plotly
+pandas
 numpy
-jinja2
-
+sqlalchemy
+MetaTrader5
+ccxt
+ta
+python-binance
+websocket-client
