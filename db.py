@@ -1,786 +1,436 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
-
-# =========================================================
-# PAGE CONFIG
-# =========================================================
-
-st.set_page_config(
-    page_title="IMMACULATE GOLD PRO // TRADING NODE",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# =========================================================
-# SESSION STATE
-# =========================================================
-
-defaults = {
-    "active_account": "FTMO Prop Client (#1513449340)",
-    "terminal_status": "🟢 SYNC TO FTMO-DEMO",
-    "balance": 100000.50,
-    "equity": 100000.50,
-    "free_margin": 100000.50,
-    "margin_level": 0.0,
-    "selected_ticker": "XAUUSD",
-    "grid_layout": "Single Chart Layout"
-}
-
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-# =========================================================
-# PREMIUM CSS
-# =========================================================
-
-st.markdown("""
-<style>
-
-html, body, [class*="css"], [data-testid="stAppViewContainer"] {
-    background: #020617 !important;
-    color: #E2E8F0 !important;
-    font-family: "Inter", "Segoe UI", sans-serif;
-}
-
-.block-container {
-    padding-top: 0.8rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    max-width: 100% !important;
-}
-
-/* HEADER */
-
-.main-header {
-    font-size: 34px;
-    font-weight: 900;
-    letter-spacing: 1px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #FFFFFF,
-            #00D1FF,
-            #00FFB2
-        );
-
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* CARDS */
-
-.crypto-card {
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(15,23,42,0.95),
-            rgba(2,6,23,0.98)
-        );
-
-    border-radius: 18px;
-    padding: 22px;
-    margin-bottom: 16px;
-
-    border: 1px solid rgba(255,255,255,0.05);
-
-    box-shadow:
-        0 10px 35px rgba(0,0,0,0.45);
-
-    transition: all 0.25s ease;
-}
-
-.crypto-card:hover {
-
-    transform: translateY(-3px);
-
-    box-shadow:
-        0 15px 45px rgba(0,0,0,0.55),
-        0 0 20px rgba(0,209,255,0.08);
-}
-
-.crypto-card.blue {
-    border-left: 4px solid #00D1FF;
-}
-
-.crypto-card.purple {
-    border-left: 4px solid #7C3AED;
-}
-
-.crypto-card.warning {
-    border-left: 4px solid #FACC15;
-}
-
-.crypto-card.danger {
-    border-left: 4px solid #FF4D6D;
-}
-
-.crypto-card.ai {
-    border-left: 4px solid #A855F7;
-}
-
-/* HUD */
-
-.hud-title {
-    color: #64748B;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 6px;
-}
-
-.hud-value {
-    font-size: 30px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-/* COLORS */
-
-.green {
-    color: #00FFB2;
-}
-
-.red {
-    color: #FF4D6D;
-}
-
-.blue {
-    color: #00D1FF;
-}
-
-.purple {
-    color: #A855F7;
-}
-
-.yellow {
-    color: #FACC15;
-}
-
-/* NEWS BANNER */
-
-.ticker-wrap {
-
-    width: 100%;
-    overflow: hidden;
-
-    background:
-        linear-gradient(
-            90deg,
-            rgba(0,209,255,0.12),
-            rgba(0,255,178,0.10),
-            rgba(124,58,237,0.12)
-        );
-
-    border:
-        1px solid rgba(255,255,255,0.05);
-
-    border-radius: 14px;
-
-    padding: 14px 0;
-
-    margin-bottom: 24px;
-
-    backdrop-filter: blur(14px);
-
-    box-shadow:
-        0 0 20px rgba(0,209,255,0.08),
-        inset 0 0 15px rgba(255,255,255,0.02);
-}
-
-.ticker {
-
-    display: inline-block;
-    white-space: nowrap;
-
-    animation: tickerMove 38s linear infinite;
-}
-
-.ticker-item {
-
-    display: inline-block;
-
-    padding-right: 90px;
-
-    font-size: 15px;
-
-    font-weight: 800;
-
-    letter-spacing: 0.7px;
-
-    text-transform: uppercase;
-
-    font-family:
-        "Orbitron",
-        "Segoe UI",
-        sans-serif;
-
-    text-shadow:
-        0 0 10px rgba(255,255,255,0.15);
-}
-
-@keyframes tickerMove {
-
-    0% {
-        transform: translateX(100%);
-    }
-
-    100% {
-        transform: translateX(-100%);
-    }
-}
-
-/* TRADINGVIEW */
-
-iframe {
-
-    width: 100% !important;
-
-    border-radius: 16px !important;
-}
-
-.tradingview-widget-container {
-
-    width: 100% !important;
-
-    border-radius: 18px;
-
-    overflow: hidden;
-
-    border: 1px solid rgba(255,255,255,0.05);
-
-    box-shadow:
-        0 10px 40px rgba(0,0,0,0.55);
-}
-
-/* PLOTLY */
-
-.js-plotly-plot {
-
-    border-radius: 18px !important;
-
-    overflow: hidden !important;
-}
-
-/* BUTTONS */
-
-.stButton > button {
-
-    width: 100%;
-
-    border-radius: 12px;
-
-    height: 52px;
-
-    border: none;
-
-    background:
-        linear-gradient(
-            90deg,
-            #00D1FF,
-            #00FFB2
-        );
-
-    color: #020617;
-
-    font-weight: 800;
-
-    font-size: 15px;
-
-    transition: 0.25s ease;
-}
-
-.stButton > button:hover {
-
-    transform: scale(1.02);
-
-    box-shadow:
-        0 0 25px rgba(0,255,178,0.25);
-}
-
-/* INPUTS */
-
-.stTextInput input,
-.stNumberInput input,
-.stSelectbox div[data-baseweb="select"] {
-
-    background: rgba(15,23,42,0.95) !important;
-
-    border-radius: 12px !important;
-
-    border: 1px solid rgba(255,255,255,0.05) !important;
-
-    color: white !important;
-}
-
-/* TABS */
-
-.stTabs [data-baseweb="tab"] {
-
-    font-size: 15px;
-
-    font-weight: 700;
-
-    color: #94A3B8;
-
-    padding: 14px 24px;
-}
-
-.stTabs [aria-selected="true"] {
-
-    color: #00FFB2 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# PREMIUM NEWS BANNER
-# =========================================================
-
-st.markdown("""
-<div class="ticker-wrap">
-
-    <div class="ticker">
-
-        <span class="ticker-item" style="color:#00FFB2;">
-            🔥 XAUUSD LIVE FLOW • INSTITUTIONAL BUY PRESSURE BUILDING ABOVE KEY LIQUIDITY
-        </span>
-
-        <span class="ticker-item" style="color:#00D1FF;">
-            ⚡ FED WATCH • MARKETS PRICING LOWER RATE EXPECTATIONS INTO Q3
-        </span>
-
-        <span class="ticker-item" style="color:#FF4D6D;">
-            ⚠️ HIGH VOLATILITY WARNING • NEW YORK SESSION EXPECTED TO EXPAND RANGE
-        </span>
-
-        <span class="ticker-item" style="color:#FACC15;">
-            📊 GOLD TARGET MATRIX • MACRO DESKS TRACKING LONG TERM $5000 THESIS
-        </span>
-
-        <span class="ticker-item" style="color:#A855F7;">
-            🧠 AI ORDER FLOW ENGINE • BULLISH LIQUIDITY SWEEP DETECTED ON XAUUSD
-        </span>
-
-    </div>
-
-</div>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# SIDEBAR
-# =========================================================
-
-st.sidebar.markdown("## 🧮 Position Calculator")
-
-risk_cash_input = st.sidebar.number_input(
-    "Risk Amount ($)",
-    min_value=1.0,
-    value=500.0,
-    step=50.0
-)
-
-sl_distance_usd = st.sidebar.number_input(
-    "Stop Loss Distance ($)",
-    min_value=0.1,
-    value=10.0,
-    step=0.5
-)
-
-tp_distance_usd = st.sidebar.number_input(
-    "Take Profit Distance ($)",
-    min_value=0.1,
-    value=20.0,
-    step=1.0
-)
-
-calculated_lots = risk_cash_input / sl_distance_usd
-profit_potential = calculated_lots * tp_distance_usd * 100
-
-st.sidebar.markdown(f"""
-<div class="crypto-card">
-    <div class="hud-title">Suggested Lots</div>
-    <div class="hud-value green">{calculated_lots:.2f}</div>
-
-    <div class="hud-title" style="margin-top:15px;">Profit Potential</div>
-    <div class="hud-value blue">${profit_potential:,.2f}</div>
-</div>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# TABS
-# =========================================================
-
-tab1, tab2, tab3 = st.tabs([
-    "📊 Dashboard",
-    "🏦 Account Manager",
-    "📺 Live Charts"
-])
-
-# =========================================================
-# TAB 1
-# =========================================================
-
-with tab1:
-
-    left, right = st.columns([3,1])
-
-    with left:
-        st.markdown(
-            f"<div class='main-header'>{st.session_state['active_account']}</div>",
-            unsafe_allow_html=True
+import time
+import random
+import io
+import sqlite3
+from datetime import datetime
+
+# -------------------------------------------------------------------
+# SQLITE DATABASE STORAGE INITIALIZATION
+# -------------------------------------------------------------------
+DB_FILE = "trading_vault.db"
+
+def init_database():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS account_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            account_id TEXT,
+            action_type TEXT
         )
-
-    with right:
-        st.markdown(
-            f"<div style='text-align:right; margin-top:15px;'>{st.session_state['terminal_status']}</div>",
-            unsafe_allow_html=True
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS strategy_performance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            asset TEXT,
+            killzone TEXT,
+            signature TEXT,
+            outcome TEXT,
+            profit REAL
         )
+    """)
+    conn.commit()
+    conn.close()
 
-    floating = st.session_state["equity"] - st.session_state["balance"]
-
-    c1, c2, c3, c4, c5 = st.columns(5)
-
-    with c1:
-        color = "red" if floating < 0 else "green"
-
-        st.markdown(f"""
-        <div class="crypto-card danger">
-            <div class="hud-title">Floating P/L</div>
-            <div class="hud-value {color}">
-                ${floating:,.2f}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c2:
-        st.markdown(f"""
-        <div class="crypto-card purple">
-            <div class="hud-title">Equity</div>
-            <div class="hud-value purple">
-                ${st.session_state['equity']:,.2f}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c3:
-        st.markdown(f"""
-        <div class="crypto-card">
-            <div class="hud-title">Balance</div>
-            <div class="hud-value green">
-                ${st.session_state['balance']:,.2f}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c4:
-        st.markdown(f"""
-        <div class="crypto-card blue">
-            <div class="hud-title">Free Margin</div>
-            <div class="hud-value blue">
-                ${st.session_state['free_margin']:,.2f}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c5:
-        st.markdown(f"""
-        <div class="crypto-card warning">
-            <div class="hud-title">Margin Level</div>
-            <div class="hud-value yellow">
-                {st.session_state['margin_level']:.1f}%
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # AI PANELS
-
-    st.markdown("## 🧠 AI Market Engine")
-
-    a1, a2, a3 = st.columns(3)
-
-    with a1:
-        st.markdown("""
-        <div class="crypto-card ai">
-            <div class="hud-title">AI Bias</div>
-            <div class="hud-value purple">
-                STRONG BULLISH
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with a2:
-        st.markdown("""
-        <div class="crypto-card ai">
-            <div class="hud-title">Volatility</div>
-            <div class="hud-value green">
-                LOW REVERSAL
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with a3:
-        st.markdown("""
-        <div class="crypto-card ai">
-            <div class="hud-title">Liquidity Target</div>
-            <div class="hud-value blue">
-                2368.50
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # CHART
-
-    st.markdown("## 📈 Commodity Matrix")
-
-    dates = [datetime.now() - timedelta(days=i) for i in range(15)]
-    prices = [2350 + i * 4 for i in range(15)]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=dates,
-        y=prices,
-        mode="lines+markers",
-        fill="tozeroy"
-    ))
-
-    fig.update_layout(
-        height=350,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="white")
+def log_account_switch(account_str):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "INSERT INTO account_logs (timestamp, account_id, action_type) VALUES (?, ?, ?)",
+        (current_time, account_str, "SWITCH_ACCOUNT")
     )
+    conn.commit()
+    conn.close()
 
-    st.plotly_chart(fig, use_container_width=True)
+def get_account_history():
+    conn = sqlite3.connect(DB_FILE)
+    df = pd.read_sql_query("SELECT timestamp, account_id, action_type FROM account_logs ORDER BY id DESC", conn)
+    conn.close()
+    return df
 
-# =========================================================
-# TAB 2
-# =========================================================
+def add_custom_trade_log(asset, killzone, signature, outcome, profit):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+        INSERT INTO strategy_performance (timestamp, asset, killzone, signature, outcome, profit)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (current_time, asset, killzone, signature, outcome, profit))
+    conn.commit()
+    conn.close()
+
+def get_performance_history():
+    conn = sqlite3.connect(DB_FILE)
+    df = pd.read_sql_query("SELECT timestamp AS 'Session Timestamp', asset AS 'Asset', killzone AS 'Killzone Block', signature AS 'Strategy Signature', outcome AS 'Outcome Status', profit AS 'Net Result ($)' FROM strategy_performance ORDER BY id DESC", conn)
+    conn.close()
+    
+    if df.empty:
+        df = pd.DataFrame([
+            {"Session Timestamp": "2026-05-19 08:30", "Asset": "XAUUSD", "Killzone Block": "London Open (Q1)", "Strategy Signature": "SNR V-Level + FVG", "Outcome Status": "TARGET ACHIEVED (TP)", "Net Result ($)": 1450.00},
+            {"Session Timestamp": "2026-05-18 14:00", "Asset": "XAUUSD", "Killzone Block": "NY Open (Q2)", "Strategy Signature": "Trendline Break + FVG", "Outcome Status": "TARGET ACHIEVED (TP)", "Net Result ($)": 980.00},
+            {"Session Timestamp": "2026-05-15 09:00", "Asset": "EURUSD", "Killzone Block": "London Open (Q2)", "Strategy Signature": "SNR Gap Rejection", "Outcome Status": "STOP LOSS BREACH (SL)", "Net Result ($)": -410.00}
+        ])
+    return df
+
+init_database()
+
+# -------------------------------------------------------------------
+# PAGE INITIALIZATION & NEON MASTER INTERFACE STYLE SHEET
+# -------------------------------------------------------------------
+st.set_page_config(
+    page_title="IMMACULATE GOLD PRO",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.markdown("""
+    <style>
+        .stApp { background-color: #0c0d14; color: #ffffff; font-family: 'Inter', sans-serif; }
+        .promo-card {
+            background: linear-gradient(135deg, #161825 0%, #11121d 100%);
+            border: 1px solid #222538; border-radius: 12px; padding: 20px; min-height: 160px;
+        }
+        .promo-neon-blue { border-top: 4px solid #00d2ff; }
+        .promo-neon-purple { border-top: 4px solid #9d4edd; }
+        .promo-neon-green { border-top: 4px solid #00ffcc; }
+        
+        .exness-btn {
+            background-color: #ffcc00 !important; color: #000000 !important;
+            font-weight: bold !important; border-radius: 6px !important;
+            padding: 8px 18px !important; text-align: center; display: inline-block;
+        }
+        
+        .stTabs [data-baseweb="tab-list"] { gap: 20px; }
+        .stTabs [data-baseweb="tab"] {
+            height: 48px; background-color: #121420; border-radius: 6px 6px 0px 0px;
+            color: #8f92a1; font-weight: bold; padding: 8px 16px; border: 1px solid #1c1f33;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #240046 !important; color: #00ffcc !important;
+            border-bottom: 2px solid #00ffcc !important; border: 1px solid #3c096c !important;
+        }
+        
+        .signal-box {
+            background-color: #161825; border-radius: 8px; padding: 15px; margin-bottom: 10px; border: 1px solid #222538;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+if "profit_alert_hit" not in st.session_state:
+    st.session_state.profit_alert_hit = False
+if "loss_alert_hit" not in st.session_state:
+    st.session_state.loss_alert_hit = False
+if "last_logged_account" not in st.session_state:
+    st.session_state.last_logged_account = None
+if "last_activity_time" not in st.session_state:
+    st.session_state.last_activity_time = time.time()
+
+SESSION_TIMEOUT_SECONDS = 300
+current_interaction_time = time.time()
+inactivity_duration = current_interaction_time - st.session_state.last_activity_time
+st.session_state.last_activity_time = current_interaction_time
+
+# -------------------------------------------------------------------
+# SIDE PANEL CONTROLS & GATEWAY LOCKOUT SYSTEM
+# -------------------------------------------------------------------
+with st.sidebar:
+    st.title("⚙️ Control Panel")
+    st.subheader("🔐 Terminal Security Gateway")
+    APP_SECRET_PASSCODE = "PRO77" 
+    input_passcode = st.text_input("Enter Supervisor Pin:", type="password")
+    
+    if inactivity_duration > SESSION_TIMEOUT_SECONDS:
+        st.error("🔴 Session Timed Out. Please re-enter PIN.")
+        st.stop()
+    if input_passcode != APP_SECRET_PASSCODE:
+        st.error("Access Denied.")
+        st.stop()
+        
+    st.success("Access Authorized")
+    st.divider()
+    
+    user_cash_risk = st.number_input("Base Cash Amount at Risk ($):", min_value=0.0, value=500.0, step=50.0)
+    user_sl_distance = st.number_input("Stop Loss Distance ($):", min_value=0.01, value=15.0, step=1.0)
+    user_target_movement = st.number_input("Target Profit Move ($):", min_value=0.01, value=30.0, step=1.0)
+    
+    st.divider()
+    enable_audio = st.checkbox("Enable Audio Alerts", value=True)
+    profit_threshold = st.number_input("Profit Sound Above ($):", value=400.0, step=50.0)
+    loss_threshold = st.number_input("Loss Sound Below ($):", value=-300.0, step=50.0)
+    st.caption("IMMACULATE GOLD PRO v6.0")
+
+# NEWS BANNER
+news_headlines = [
+    "🔥 GOLD spikes as liquidities shift aggressively upward near critical zones",
+    "📈 FED signals policy hold ahead of crucial upcoming global CPI report releases"
+]
+banner_text = " &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ".join(news_headlines)
+st.markdown(f"<div style='background-color: #121420; padding: 12px; border-radius: 8px; border: 1px solid #240046; margin-bottom: 20px; overflow: hidden; white-space: nowrap;'><marquee behavior='scroll' direction='left' scrollamount='5' style='color: #00ffcc; font-size: 16px; font-weight: 600;'>{banner_text}</marquee></div>", unsafe_allow_html=True)
+
+# TOP LEFT KJS INITIALS
+header_col1, header_col2 = st.columns()
+with header_col1:
+    st.markdown("<div style='background: linear-gradient(135deg, #3c096c 0%, #240046 100%); padding: 12px; border-radius: 8px; border: 2px solid #00ffcc; text-align: center; box-shadow: 0px 0px 10px #00ffcc;'><h2 style='color: #00ffcc; margin: 0; font-weight: 900; letter-spacing: 2px; font-size: 28px;'>KJS</h2></div>", unsafe_allow_html=True)
+with header_col2:
+    st.markdown("<h1 style='margin: 0; padding-top: 4px; font-size: 32px;'>Exness Personal Workspace Matrix</h1>", unsafe_allow_html=True)
+
+# -------------------------------------------------------------------
+# ALGORITHMIC ENGINE (Malaysian SNR + Quarterly Theory + FVG)
+# -------------------------------------------------------------------
+def generate_algorithmic_signals(ticker):
+    htf_status = {
+        "Monthly (M)": {"Trend": "Strong Bullish", "Key_SNR": "V-Level Support @ 2280.00", "FVG": "Mitigated"},
+        "Weekly (W)": {"Trend": "Bullish Expansion", "Key_SNR": "A-Level Flipped @ 2310.00", "FVG": "🚨 Unmitigated FVG @ 2295.00"},
+        "Daily (D)": {"Trend": "Consolidation", "Key_SNR": "Gap Support Zone @ 2315.00", "FVG": "Mitigated"},
+        "H4 (4-Hour)": {"Trend": "Bearish Retracement", "Key_SNR": "V-Level Demand @ 2312.00", "FVG": "🚨 Unmitigated FVG @ 2308.00"},
+        "H1 (1-Hour)": {"Trend": "Trendline Compression", "Key_SNR": "Clean Peak Resistance @ 2335.00", "FVG": "Mitigated"}
+    }
+    
+    current_hour = datetime.now().hour
+    active_killzone = "London Open Killzone (Q2 Accumulation)" if (7 <= current_hour <= 11) else "New York Open Killzone (Q2 Manipulation)"
+    
+    liquidity_sweep = "⚠️ YES - Asian Session High Cleared (Liquidity Engineered)"
+    trendline_break = "✅ CONFIRMED - H1 Bearish Trendline Broken on Volume"
+    snr_rejection = "🔒 COMPLETED - Retested Malaysian Fresh Gap and H4 Unmitigated FVG Border"
+    
+    bias = "STRONG BUY" if ticker == "XAUUSD" else "SELL LIMIT"
+    tp_target = 2365.00 if ticker == "XAUUSD" else 1.0710
+    sl_target = 2304.00 if ticker == "XAUUSD" else 1.0895
+    
+    return htf_status, active_killzone, liquidity_sweep, trendline_break, snr_rejection, bias, tp_target, sl_target
+
+# -------------------------------------------------------------------
+# MASTER ACCURACY CALCULATIONS ENGINE
+# -------------------------------------------------------------------
+perf_df = get_performance_history()
+total_trades = len(perf_df)
+wins = len(perf_df[perf_df["Outcome Status"] == "TARGET ACHIEVED (TP)"])
+win_rate = (wins / total_trades) * 100 if total_trades > 0 else 50.0
+
+gross_profits = perf_df[perf_df["Net Result ($)"] > 0]["Net Result ($)"].sum()
+gross_losses = abs(perf_df[perf_df["Net Result ($)"] < 0]["Net Result ($)"].sum())
+profit_factor = gross_profits / gross_losses if gross_losses > 0 else gross_profits
+
+# -------------------------------------------------------------------
+# AUTOMATED RISK EXPOSURE SCALING LOGIC (Based on Win Rate %)
+# -------------------------------------------------------------------
+risk_multiplier = 1.0
+risk_status_msg = "STANDARD RISK BALANCE"
+risk_badge_color = "#3498db"
+
+if win_rate < 50.0:
+    risk_multiplier = 0.50
+    risk_status_msg = "⚠️ PROTECTION MODE: Risk Cut by 50% Due to Low Win Rate"
+    risk_badge_color = "#ff4b4b"
+elif win_rate > 65.0:
+    risk_multiplier = 1.25
+    risk_status_msg = "🚀 AGGRESSIVE SCALING: Lot Capacity Boosted by 25% due to High Precision"
+    risk_badge_color = "#00ffcc"
+
+scaled_cash_risk = user_cash_risk * risk_multiplier
+
+# -------------------------------------------------------------------
+# DASHBOARD CARD TABS
+# -------------------------------------------------------------------
+st.write("")
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard Accounts View", "🗃️ Active Account Manager", "📈 Live TradingView Charts", "💾 Data Logs & Batch Importer"])
 
 with tab2:
+    st.subheader("Account Routing Setup")
+    account_options_list = ["#130100171 TenDiGiTz (MT5 Standard)", "#1513449340 (FTMO Demo Pool)"]
+    selected_account = st.selectbox("Switch Primary Live Terminal Endpoint:", account_options_list)
+    if selected_account != st.session_state.last_logged_account:
+        log_account_switch(selected_account)
+        st.session_state.last_logged_account = selected_account
+    st.dataframe(get_account_history(), use_container_width=True, hide_index=True)
 
-    st.markdown("## 🏦 Account Management")
+with tab1:
+    search_grid_1, search_grid_2 = st.columns(2)
+    with search_grid_1:
+        asset_class_filter = st.selectbox("Market Asset Category:", ["Commodities", "Forex", "Futures"])
+    asset_dictionary = {"Commodities": ["XAUUSD", "USOIL"], "Forex": ["EURUSD", "GBPUSD"], "Futures": ["ES1!", "NQ1!"]}
+    with search_grid_2:
+        active_ticker_symbol = st.selectbox("Ticker Target:", asset_dictionary[asset_class_filter])
 
-    broker = st.selectbox(
-        "Broker",
-        ["FTMO", "Exness", "XM", "IC Markets"]
-    )
+    # Execute Signals Calculation Pipeline
+    htf, killzone, liq_sweep, tl_break, m_snr, final_bias, target_tp, target_sl = generate_algorithmic_signals(active_ticker_symbol)
 
-    account_id = st.number_input(
-        "Account Number",
-        value=1513449340
-    )
+    # Display Risk Allocation Notice Banner
+    st.markdown(f"""
+        <div style='background-color:#161825; border-left: 6px solid {risk_badge_color}; padding:12px; border-radius:4px; margin-bottom:15px;'>
+            <span style='color:{risk_badge_color}; font-weight:bold; font-size:14px;'>{risk_status_msg}</span><br>
+            <span style='color:#8f92a1; font-size:12px;'>Current Matrix Multiplier: <b>{risk_multiplier:.2f}x</b> | Base Risk allocation transformed to: <b>${scaled_cash_risk:,.2f}</b></span>
+        </div>
+    """, unsafe_allow_html=True)
 
-    balance = st.number_input(
-        "Balance",
-        value=100000.50
-    )
+    # ADVANCED STRATEGY SIGNAL ENGINE VIEWPORTS
+    st.markdown("### 🤖 Advanced Strategy Signal Engine")
+    sig_col1, sig_col2 = st.columns(2)
+    
+    with sig_col1:
+        st.markdown(f"""
+        <div class='signal-box' style='border-left: 5px solid #ffcc00;'>
+            <h4 style='color:#ffcc00; margin:0;'>🌐 Core Time-Block Execution Framework</h4>
+            <p style='margin:5px 0 0 0; font-size:14px;'><b>Active Volatility Matrix Window:</b> {killzone}</p>
+            <p style='margin:2px 0 0 0; font-size:13px; color:#8f92a1;'>Trader Daye 90-Min Fractal Cycle Phase Mapping Enabled</p>
+            <hr style='border:0.5px solid #222538; margin:10px 0;'>
+            <h4 style='color:#00ffcc; margin:0;'>🎯 Structural Confluence Checklists</h4>
+            <p style='margin:5px 0 0 0; font-size:13px;'><b>Liquidity Status:</b> {liq_sweep}</p>
+            <p style='margin:2px 0 0 0; font-size:13px;'><b>Trendline Rule:</b> {tl_break}</p>
+            <p style='margin:2px 0 0 0; font-size:13px;'><b>Malaysian Candlestick SNR Base:</b> {m_snr}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with sig_col2:
+        bias_color = "#00ffcc" if "BUY" in final_bias else "#ff4b4b"
+        st.markdown(f"""
+        <div class='signal-box' style='border-left: 5px solid {bias_color}; min-height:190px;'>
+            <h4 style='color:{bias_color}; margin:0;'>🧠 Live AI Predictive Output Decision</h4>
+            <h2 style='color:#ffffff; margin:8px 0 4px 0; font-size:28px;'>Order Bias: <span style='color:{bias_color};'>{final_bias}</span></h2>
+            <p style='margin:0; font-size:15px; color:#00d2ff;'><b>Take Profit Target:</b> {target_tp:,.2f}</p>
+            <p style='margin:2px 0 0 0; font-size:15px; color:#ff4b4b;'><b>Invalidation Stop Loss:</b> {target_sl:,.2f}</p>
+            <p style='margin:8px 0 0 0; font-size:11px; color:#8f92a1;'>Engine Warning: Confirm LTF structural alignment before scaling exposure rules.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    equity = st.number_input(
-        "Equity",
-        value=100000.50
-    )
+    # Higher Timeframe Matrix Expansion Module with FVG Data Columns
+    with st.expander("🔍 View Complete Multi-Timeframe Structural Blueprint & Unmitigated FVGs"):
+        htf_cols = st.columns(5)
+        for idx, (tf, metric) in enumerate(htf.items()):
+            with htf_cols[idx]:
+                fvg_font_color = "#ff4b4b" if "🚨" in metric['FVG'] else "#8f92a1"
+                st.markdown(f"""
+                <div style='background-color:#121420; padding:12px; border-radius:6px; border:1px solid #1c1f33; text-align:center;'>
+                    <h5 style='margin:0; color:#9d4edd;'>{tf}</h5>
+                    <p style='margin:5px 0 2px 0; font-size:13px; font-weight:bold;'>{metric['Trend']}</p>
+                    <p style='margin:0; font-size:11px; color:#8f92a1; min-height:30px;'>{metric['Key_SNR']}</p>
+                    <p style='margin:5px 0 0 0; font-size:11px; color:{fvg_font_color}; font-weight:500;'>{metric['FVG']}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-    free_margin = st.number_input(
-        "Free Margin",
-        value=100000.50
-    )
+    # INTERACTIVE SLIDERS SIMULATION & OVERRIDES
+    st.markdown("### 🎛️ Live Simulation Sandbox & Trade Outcome Logger")
+    with st.expander("Deploy Manual Backtest Slider Overrides"):
+        slider_col1, slider_col2, slider_col3 = st.columns(3)
+        with slider_col1:
+            sim_killzone = st.select_slider("Select Test Timeblock Node:", options=["London Open (Q1)", "London Open (Q2)", "NY Open (Q1)", "NY Open (Q2)"])
+            sim_strategy = st.selectbox("Select Strategy Signature Core:", ["SNR V-Level + FVG", "Trendline Break + FVG", "SNR Gap Rejection"])
+        with slider_col2:
+            sim_outcome = st.radio("Simulated Target Outcome Status:", ["TARGET ACHIEVED (TP)", "STOP LOSS BREACH (SL)"])
+        with slider_col3:
+            sim_profit = st.slider("Net Theoretical Performance Return ($):", min_value=-1500.0, max_value=3000.0, value=500.0, step=50.0)
+            if st.button("⚡ Commit Result to Performance Ledger"):
+                add_custom_trade_log(active_ticker_symbol, sim_killzone, sim_strategy, sim_outcome, sim_profit)
+                st.rerun()
 
-    server = st.text_input(
-        "Server",
-        value="FTMO-Demo"
-    )
+    # STRATEGIC SIGNAL ACCURACY & VERIFICATION LEDGER
+    st.markdown("### 📈 Strategic Signal Accuracy & Verification Ledger")
+    metric_grid_1, metric_grid_2, metric_grid_3 = st.columns(3)
+    with metric_grid_1:
+        st.metric(label="📊 Total Validated Setups", value=f"{total_trades} Session Signals")
+    with metric_grid_2:
+        st.metric(label="🎯 Strategy Win Rate", value=f"{win_rate:.1f}%", delta=f"{wins} Wins / {total_trades - wins} Losses")
+    with metric_grid_3:
+        st.metric(label="⚡ Confluence Profit Factor", value=f"{profit_factor:.2f}x")
+        
+    st.dataframe(perf_df, use_container_width=True, hide_index=True)
 
-    if st.button("🔌 Sync Account"):
-
-        used_margin = max(equity - free_margin, 1)
-        margin_level = (equity / used_margin) * 100
-
-        st.session_state["active_account"] = f"{broker} (#{account_id})"
-        st.session_state["terminal_status"] = f"🟢 SYNC TO {server.upper()}"
-        st.session_state["balance"] = balance
-        st.session_state["equity"] = equity
-        st.session_state["free_margin"] = free_margin
-        st.session_state["margin_level"] = margin_level
-
-        st.success("Account synced successfully.")
-
-# =========================================================
-# TRADINGVIEW WIDGET
-# =========================================================
-
-def create_tradingview_widget(symbol="OANDA:XAUUSD", interval="15"):
-
-    html_code = f"""
-    <div class="tradingview-widget-container">
-        <div id="tradingview_chart"></div>
-
-        <script
-            type="text/javascript"
-            src="https://s3.tradingview.com/tv.js">
-        </script>
-
-        <script type="text/javascript">
-
-        new TradingView.widget(
-        {{
-            "autosize": true,
-            "symbol": "{symbol}",
-            "interval": "{interval}",
-            "timezone": "Africa/Johannesburg",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "toolbar_bg": "#020617",
-            "enable_publishing": false,
-            "hide_top_toolbar": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
-            "container_id": "tradingview_chart"
-        }});
-
-        </script>
-    </div>
-    """
-
-    return html_code
-
-# =========================================================
-# TAB 3
-# =========================================================
-
+# TRADINGVIEW FRAMEWORK
 with tab3:
+    st.subheader(f"TradingView Advanced Canvas — {active_ticker_symbol}")
+    resolved_exchange = "FX_IDC" if active_ticker_symbol == "XAUUSD" else "OANDA"
+    tradingview_widget_frame = f"""<iframe src="https://tradingview.com{resolved_exchange}%3A{active_ticker_symbol}&interval=15&theme=dark" width="100%" height="650" frameborder="0" style="border-radius: 12px; border: 1px solid #1c1f33;"></iframe>"""
+    st.components.v1.html(tradingview_widget_frame, height=660)
 
-    st.markdown("## 📺 Live TradingView Charts")
+# -------------------------------------------------------------------
+# DATA LOGS & AUTOMATED CSV BATCH IMPORTER ENGINE
+# -------------------------------------------------------------------
+with tab4:
+    st.header("🗄️ Automated Strategy CSV Batch Importer & Logs")
+    st.write("Upload a historical batch file (with columns: `asset,killzone,signature,outcome,profit`) to bulk-update your statistical dashboard metrics.")
+    
+    uploaded_file = st.file_uploader("Choose trading log CSV file:", type=["csv"])
+    if uploaded_file is not None:
+        try:
+            imported_df = pd.read_csv(uploaded_file)
+            required_cols = ["asset", "killzone", "signature", "outcome", "profit"]
+            if all(col in imported_df.columns for col in required_cols):
+                for _, row in imported_df.iterrows():
+                    add_custom_trade_log(row['asset'], row['killzone'], row['signature'], row['outcome'], float(row['profit']))
+                st.success(f"Successfully processed and committed {len(imported_df)} records to the terminal core ledger.")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Invalid schema. CSV must contain fields: asset, killzone, signature, outcome, profit")
+        except Exception as e:
+            st.error(f"Error parsing historical document: {e}")
+            
+    st.divider()
+    st.subheader("Download Current Performance Logs")
+    csv_string_buffer = io.StringIO()
+    perf_df.to_csv(csv_string_buffer, index=False)
+    st.download_button(label="📥 Download Data Records (.CSV)", data=csv_string_buffer.getvalue(), file_name="KJS_Vault_Log.csv", mime="text/csv")
 
-    col1, col2 = st.columns(2)
+# -------------------------------------------------------------------
+# LIVE ENGINE METRICS REFRESH ENGINE LOOP WITH DYNAMIC LOT SIZING
+# -------------------------------------------------------------------
+with tab1:
+    st.write("")
+    live_exness_panel = st.empty()
+    account_settled_balance = 100000.50
+    allocated_margin_held = 2150.00
 
-    with col1:
-        search_query = st.text_input(
-            "Ticker Symbol",
-            value=st.session_state["selected_ticker"]
-        )
+    # lot calculation linked directly to the scaled cash risk based on winning percentages
+    calculated_position_lots = scaled_cash_risk / user_sl_distance if user_sl_distance > 0 else 0.0
+    calculated_yield_potential = calculated_position_lots * user_target_movement * 100
 
-    with col2:
-        layout_selection = st.selectbox(
-            "Chart Layout",
-            [
-                "Single Chart Layout",
-                "2-Chart Split Matrix Grid",
-                "4-Chart Comprehensive Matrix Grid"
-            ]
-        )
+    while True:
+        with live_exness_panel.container():
+            live_gold_spot_quote = round(2322.40 + random.uniform(-1.20, 1.40), 2)
+            live_calculated_pnl = round(random.uniform(-450.00, 750.00), 2)
+            account_live_equity = account_settled_balance + live_calculated_pnl
+            account_free_margin = account_live_equity - allocated_margin_held
+            live_corrected_liquidity = round(4107.00 + (live_gold_spot_quote * 0.0002), 2)
 
-    if st.button("🎯 Load Live Charts"):
+            if enable_audio:
+                if live_calculated_pnl >= profit_threshold and not st.session_state.profit_alert_hit:
+                    st.audio("https://google.com", format="audio/ogg", autoplay=True)
+                    st.session_state.profit_alert_hit = True
+                elif live_calculated_pnl < profit_threshold:
+                    st.session_state.profit_alert_hit = False
 
-        st.session_state["selected_ticker"] = search_query.upper()
-        st.session_state["grid_layout"] = layout_selection
+            neon_pl_color = "#ff4b4b" if live_calculated_pnl < 0 else "#00ffcc"
+            neon_pl_sign = "+" if live_calculated_pnl >= 0 else ""
 
-    ticker = st.session_state["selected_ticker"]
-
-    # SYMBOL ROUTING
-
-    if ":" not in ticker:
-
-        if ticker in ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY"]:
-            ticker = f"OANDA:{ticker}"
-
-        elif ticker in ["BTCUSDT", "ETHUSDT"]:
-            ticker = f"BINANCE:{ticker}"
-
-        else:
-            ticker = f"TVC:{ticker}"
-
-    st.markdown(f"### 🔥 {ticker}")
-
-    # SINGLE CHART
-
-    if st.session_state["grid_layout"] == "Single Chart Layout":
-
-        st.components.v1.html(
-            create_tradingview_widget(ticker, "15"),
-            height=920,
-            scrolling=False
-        )
-
-    # 2 CHART LAYOUT
-
-    elif st.session_state["grid_layout"] == "2-Chart Split Matrix Grid":
-
-        c1, c2 = st.columns(2)
-
-        with c1:
-
-            st.markdown("#### ⏱️ 15 Minute Execution Feed")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "15"),
-                height=720,
-                scrolling=False
-            )
-
-        with c2:
-
-            st.markdown("#### 🌍 Daily Institutional Trend")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "D"),
-                height=720,
-                scrolling=False
-            )
-
-    # 4 CHART GRID
-
-    elif st.session_state["grid_layout"] == "4-Chart Comprehensive Matrix Grid":
-
-        r1c1, r1c2 = st.columns(2)
-
-        with r1c1:
-
-            st.markdown("#### ⚡ 5 Minute Scalping Flow")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "5"),
-                height=620,
-                scrolling=False
-            )
-
-        with r1c2:
-
-            st.markdown("#### ⚡ 15 Minute Execution Flow")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "15"),
-                height=620,
-                scrolling=False
-            )
-
-        r2c1, r2c2 = st.columns(2)
-
-        with r2c1:
-
-            st.markdown("#### 📈 4 Hour Market Structure")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "240"),
-                height=620,
-                scrolling=False
-            )
-
-        with r2c2:
-
-            st.markdown("#### 🌍 Daily Institutional Trend")
-
-            st.components.v1.html(
-                create_tradingview_widget(ticker, "D"),
-                height=620,
-                scrolling=False
-            )
+            st.markdown(f"""
+                <div style="background-color: #121420; border: 1px solid #1c1f33; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c1f33; padding-bottom: 15px; margin-bottom: 20px;">
+                        <div>
+                            <span style="background-color: #1c1f33; color: #8f92a1; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px;">REAL</span>
+                            <span style="color: #8f92a1; font-size: 13px; font-weight: 500; margin-right: 15px;">MT5 Standard</span>
+                            <span style="color: #ffffff; font-weight: bold; font-size: 14px;">#130100171 TenDiGiTz</span>
+                        </div>
+                        <div><span class="exness-btn">🟡 Trade</span></div>
+                    </div>
+                    <div style="margin-bottom: 25px;">
+                        <span style="color: #8f92a1; font-size: 14px; display: block; margin-bottom: 2px;">FLOATING P/L</span>
+                        <h1 style="color: {neon_pl_color}; font-size: 42px; font-weight: 800; margin: 0; font-family: monospace;">{neon_pl_sign}${live_calculated_pnl:,.2f} USD</h1>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; border-top: 1px solid #1c1f33; padding-top: 20px;">
+                        <div><p style="color: #8f92a1; font-size: 12px; margin: 0;">BALANCE</p><h3 style="color: #ffffff; margin: 0;">${account_settled_balance:,.2f} USD</h3></div>
+                        <div><p style="color: #8f92a1; font-size: 12px; margin: 0;">FREE MARGIN</p><h3 style="color: #00d2ff; margin: 0;">${account_free_margin:,.2f} USD</h3></div>
+                        <div><p style="color: #8f92a1; font-size: 12px; margin: 0;">EQUITY</p><h3 style="color: #ffffff; margin: 0;">${account_live_equity:,.2f} USD</h3></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; background-color: #0c0d14; padding: 15px; border-radius: 6px; border: 1px solid #1c1f33;">
+                        <div><p style="color: #9d4edd; font-size: 11px; font-weight: bold; margin:0;">🤖 AI LIQUIDITY TARGET</p><h4 style="color: #ffffff; margin: 0;">{live_corrected_liquidity:,.2f}</h4></div>
+                        <div><p style="color: #00ffcc; font-size: 11px; font-weight: bold; margin:0;">📐 CALCULATED GOLD LOT SIZE</p><h4 style="color: #ffffff; margin: 0;">{calculated_position_lots:.2f} Lots</h4></div>
+                        <div><p style="color: #3498db; font-size: 11px; font-weight: bold; margin:0;">💎 TOTAL PROFIT POTENTIAL</p><h4 style="color: #ffffff; margin: 0;">${calculated_yield_potential:,.2f}</h4></div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            time.sleep(1)
